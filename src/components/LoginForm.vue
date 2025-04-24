@@ -1,4 +1,10 @@
 <script setup lang="ts">
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useApi } from '@/composables/useapi'
+import { useAuthStore } from '@/stores/auth'
+import type { LoginRequest, LoginResponse } from '@/types/auth'
+
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -9,30 +15,32 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth' // Import the auth store to manage authentication state
 
-// Set up reactive variables for email and password input fields
-const email = ref('')
+// Form fields
+const phone = ref('')
 const password = ref('')
-
-// Initialize Vue Router
 const router = useRouter()
-
-// Access the authentication store
 const authStore = useAuthStore()
 
-// Handle login
-const handleLogin = () => {
-  // You would generally validate the credentials with an API here.
-  // For now, we simulate the login process.
-  if (email.value && password.value) {
-    authStore.login() // Set authentication status to true
-    router.push('/dashboard') // Redirect to the dashboard on successful login
-  } else {
-    // Handle login failure (optional: show an error message)
-    alert('Please fill in both email and password')
+// Use composable for login API
+const { data, error, loading, fetchData } = useApi<LoginResponse>('POST', '/api/v0/account/login/password/')
+
+const handleLogin = async () => {
+  if (!phone.value || !password.value) {
+    alert('لطفا شماره تلفن و رمز عبور را وارد کنید')
+    return
+  }
+
+  await fetchData({
+    phone_number: phone.value,
+    password: password.value,
+  } as LoginRequest)
+
+  if (data.value) {
+    authStore.setToken(data.value.access_token)
+    router.push('/dashboard')
+  } else if (error.value) {
+    alert('ورود ناموفق: ' + error.value)
   }
 }
 </script>
@@ -40,22 +48,18 @@ const handleLogin = () => {
 <template>
   <Card class="mx-auto max-w-sm w-96">
     <CardHeader>
-      <CardTitle class="text-2xl">
-        ورود
-      </CardTitle>
-      <CardDescription>
-        ایمیل خود را وارد کنید تا به حساب کاربری خود وارد شوید
-      </CardDescription>
+      <CardTitle class="text-2xl">ورود</CardTitle>
+      <CardDescription>شماره تلفن خود را وارد کنید تا وارد شوید</CardDescription>
     </CardHeader>
     <CardContent>
       <div class="grid gap-4">
         <div class="grid gap-2">
-          <Label for="email">ایمیل</Label>
+          <Label for="phone">شماره تلفن</Label>
           <Input
-            id="email"
-            type="email"
-            v-model="email"
-            placeholder="m@example.com"
+            id="phone"
+            type="tel"
+            v-model="phone"
+            placeholder="09012345678"
             required
           />
         </div>
@@ -68,8 +72,8 @@ const handleLogin = () => {
             required
           />
         </div>
-        <Button @click="handleLogin" class="w-full">
-          ورود
+        <Button @click="handleLogin" class="w-full" :disabled="loading">
+          {{ loading ? 'در حال ورود...' : 'ورود' }}
         </Button>
       </div>
     </CardContent>

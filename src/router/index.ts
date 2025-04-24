@@ -2,8 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Landing from '@/pages/Landing.vue'
 import Login from '@/pages/Login.vue'
 import Dashboard from '@/pages/Dashboard.vue'
-import Profile from '@/pages/dashboard/ProfileScreen.vue'
-import CreateProduct from '@/pages/dashboard/CreateProductScreen.vue'
+import ManageEvent from '@/pages/dashboard/ManageEvent.vue'
+import CreateProduct from '@/pages/dashboard/CreateEvent.vue'
 import ViewProduct from '@/pages/dashboard/ViewProductScreen.vue'
 import Inbox from '@/pages/dashboard/InboxScreen.vue'
 import Settings from '@/pages/dashboard/SettingsScreen.vue'
@@ -13,21 +13,38 @@ const routes = [
   { path: '/login', component: Login },
   {
     path: '/dashboard',
+    meta: { requiresAuth: true },
     component: Dashboard,
     children: [
-      { path: 'profile', component: Profile },
-      { path: 'create-product', component: CreateProduct },
+      { path: 'create-event', component: CreateProduct },
+      { path: 'manage-event', component: ManageEvent },
+      {
+        path: 'manage-event/:id',
+        component: () => import('@/pages/dashboard/ManageEventDetails.vue'),
+        props: true
+      },
+      
       { path: 'view-product', component: ViewProduct },
       { path: 'inbox', component: Inbox },
       { path: 'settings', component: Settings },
     ],
-    meta: { requiresAuth: true },
   },
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
+})
+
+// 🔐 Navigation Guard
+router.beforeEach((to, from, next) => {
+  const isLoggedIn = !!localStorage.getItem('auth_token') // or your custom logic
+
+  if (to.meta.requiresAuth && !isLoggedIn) {
+    next('/login')
+  } else {
+    next()
+  }
 })
 
 export default router

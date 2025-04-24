@@ -14,9 +14,14 @@ import {
 
 // Menu items.
 const items = [
+{
+    title: 'ایجاد رویداد',
+    url: '/dashboard/create-event',
+    icon: Calendar, // You can replace this icon with a different one if needed
+  },
   {
-    title: 'پروفایل',
-    url: '/dashboard/profile', // Updated to match the new screen
+    title: 'مدیریت رویداد',
+    url: '/dashboard/manage-event', // Updated to match the new screen
     icon: Home,
   },
   {
@@ -24,11 +29,7 @@ const items = [
     url: '/dashboard/inbox',
     icon: Inbox,
   },
-  {
-    title: 'ایجاد محصول',
-    url: '/dashboard/create-product',
-    icon: Calendar, // You can replace this icon with a different one if needed
-  },
+
   {
     title: 'مشاهده محصولات',
     url: '/dashboard/view-product',
