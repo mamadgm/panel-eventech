@@ -4,24 +4,7 @@ import { useApi } from '@/composables/useapi';
 import DatePicker from 'vue3-persian-datetime-picker';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import Cinema from '@/components/Cinema.vue';
-
-interface Event {
-  name: string;
-  // image: string;
-  start_acceptance: string;
-  start_time: string;
-  end_time: string;
-  default_hall: number;
-  categories: string[];
-}
-
-interface Hall {
-  id: number;
-  name: string;
-  capacity: string;
-  image: string | null;
-  address: string;
-}
+import type { Hall , Event } from '@/types/events';
 
 // Refs for form fields and hall data
 const event = ref<Event>({

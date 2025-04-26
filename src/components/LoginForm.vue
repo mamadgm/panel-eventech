@@ -38,7 +38,7 @@ const handleLogin = async () => {
 
   if (data.value) {
     authStore.setToken(data.value.access_token)
-    router.push('/dashboard')
+    router.push('/dashboard/manage-event')
   } else if (error.value) {
     alert('ورود ناموفق: ' + error.value)
   }

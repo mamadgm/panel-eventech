@@ -5,6 +5,7 @@ import { onMounted, ref } from 'vue';
 import CinemaGrid from '@/components/Cinema.vue'; // keep original
 import { Button } from '@/components/ui/button';
 import { useRoute } from 'vue-router';
+import type { CinemaData, CinemaPostData } from '@/types/events';
 
 const route = useRoute();
 const eventId = parseInt(route.params.id as string)
@@ -15,19 +16,7 @@ const cinemaLayout = ref<number[][]>([[0]]);
 const successMessage = ref('');
 const errorMessage = ref('');
 
-// API hooks
-interface CinemaData {
-  id: number;
-  event_name: string;
-  event_start_time: string;
-  event_end_time: string;
-  position_matrix: number[][];
-}
 
-interface CinemaPostData {
-  event: number;
-  position_matrix: number[][];
-}
 
 
 const { data, error, loading, fetchData } = useApi<CinemaData>(

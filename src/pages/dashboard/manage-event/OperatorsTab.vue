@@ -2,13 +2,14 @@
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useApi } from '@/composables/useapi';
-
+import type { OperatorDataGET , OperatorData } from '@/types/oper';
 
 const route = useRoute();
 const eventId = parseInt(route.params.id as string);
-
 const postSuccessMessage = ref('');
 const postErrorMessage = ref('');
+const deleteSuccessMessage = ref('');
+const deleteErrorMessage = ref('');
 
 // Operator data form
 const persondata = ref({
@@ -18,30 +19,27 @@ const persondata = ref({
   email: '',
   password: ''
 });
+//Delete Oper
+const deleteOperOfEvent = async (id: number) => {
+  const { data: delete_data, error: error_data, loading: loading_data, fetchData: deleteOper } = useApi<OperatorDataGET[]>(
+    'DELETE',
+    `/api/v0/operators/${eventId}/${id}/delete/`
+  );
 
-// POST request body
-interface OperatorData {
-  first_name: string;
-  last_name: string;
-  phone_number: string;
-  email: string;
-  password: string;
-  password_confirm: string;
-}
+  try {
+    await deleteOper();
+    console.log('Deleted!');
+    await load_data(); // Refresh operators
+  } catch (error) {
+    console.error('Failed to delete:', error);
+  }
+};
 
-// GET response type
-interface OperatorDataGET {
-  id: number;
-  first_name: string;
-  last_name: string;
-  phone_number: string;
-  email: string;
-}
 
 // Fetch Operators
 const { data, error, loading, fetchData } = useApi<OperatorDataGET[]>(
   'GET',
-  `/api/v0/operators/${eventId}`,
+  `/api/v0/operators/${eventId}/`,
 );
 
 // Submit POST request to create operator
@@ -50,8 +48,11 @@ const { data: postData, error: postError, loading: postLoading, fetchData: postF
   `/api/v0/operators/${eventId}/create/`,
 );
 
+
+
+
 // Submit operator data
-const submitEventData = async () => {
+const submitNewOper = async () => {
   const PostBody: OperatorData = {
     first_name: persondata.value.firstName,
     last_name: persondata.value.lastName,
@@ -92,15 +93,10 @@ const load_data = async () => {
 onMounted(() => {
   load_data();
 });
-
-
-function deleteoper(index: number) {
-  console.log('Deleting operator at index:', index);
-}
 </script>
 
 <template>
-  <form @submit.prevent="submitEventData" class="space-y-6 p-6 bg-white shadow-lg rounded-lg max-w-3xl mx-auto">
+  <form @submit.prevent="submitNewOper" class="space-y-6 p-6 bg-white shadow-lg rounded-lg max-w-3xl mx-auto">
     <h2 class="text-2xl font-bold mb-4 text-right">اضافه کردن اپراتور</h2>
 
     <!-- Success and Error Messages -->
@@ -147,6 +143,13 @@ function deleteoper(index: number) {
   <!-- Operators List -->
   <div class="mt-8 max-w-4xl mx-auto">
     <h3 class="text-xl font-bold mb-4 text-right">اپراتورهای موجود</h3>
+    <div v-if="deleteSuccessMessage" class="bg-green-100 text-green-800 p-4 rounded mb-4 border border-green-300">
+      {{ deleteSuccessMessage }}
+    </div>
+    <div v-if="deleteErrorMessage" class="bg-red-100 text-red-800 p-4 rounded mb-4 border border-red-300">
+      {{ deleteErrorMessage }}
+    </div>
+
     <div v-if="loading" class="text-center py-8">در حال بارگذاری...</div>
     <div v-if="error" class="text-red-500 text-center py-8">خطا در دریافت اطلاعات: {{ error }}</div>
 
@@ -156,8 +159,9 @@ function deleteoper(index: number) {
         <p class="text-gray-600"><span class="font-medium">تلفن:</span> {{ operator.phone_number }}</p>
         <p class="text-gray-600"><span class="font-medium">ایمیل:</span> {{ operator.email || 'ندارد' }}</p>
         <div class="mt-4">
-          <button @click="deleteoper(operator.id)" class="bg-red-600 text-white py-1 px-3 rounded-md">
-            حذف اپراتور </button>
+          <button @click="deleteOperOfEvent(operator.id)" class="bg-red-600 text-white py-1 px-3 rounded-md">
+            حذف اپراتور
+          </button>
         </div>
       </div>
     </div>

@@ -6,26 +6,12 @@ import DatePicker from 'vue3-persian-datetime-picker';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import Cinema from '@/components/Cinema.vue';
 import { Toaster } from '@/components/ui/sonner';
+import type { Hall  , Event} from '@/types/events';
 
 const route = useRoute();
 const eventId = route.params.id;
 
-interface Event {
-  name: string;
-  start_acceptance: string;
-  start_time: string;
-  end_time: string;
-  default_hall: number;
-  categories: string[];
-}
 
-interface Hall {
-  id: number;
-  name: string;
-  capacity: string;
-  image: string | null;
-  address: string;
-}
 
 const event = ref<Event>({
   name: '',

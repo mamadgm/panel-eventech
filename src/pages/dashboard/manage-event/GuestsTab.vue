@@ -4,39 +4,19 @@ import * as XLSX from 'xlsx';
 import { useRoute } from 'vue-router';
 import { useApi } from '@/composables/useapi';
 import { nextTick } from 'vue';
+import type { Guest, GuestData } from '@/types/events';
 
 
 const route = useRoute();
 const eventId = route.params.id as string
 
 // Excel File Handling
-const fileInput = ref<HTMLInputElement | null>(null);
 const excelFile = ref<File | null>(null);
 
 // Add these to manage user messages
 const successMessage = ref('');
 const errorMessage = ref('');
 
-interface Guest {
-  event: string;
-  first_name: string;
-  last_name: string;
-  phone_number: string;
-  email: string;
-  ticket_number: string;
-  ticket_registration_datetime: string;
-  is_vip: boolean;
-}
-
-// API Integration
-interface GuestData {
-  id: number;
-  first_name: string;
-  last_name: string;
-  phone_number: string;
-  ticket_number: string;
-  is_vip: boolean;
-}
 const jsonData = ref<Guest[]>([]);
 const { data: apiData, error, loading, fetchData } = useApi<GuestData[]>("GET", `/api/v0/guest/${eventId}/`);
 const { data: postData, error: postError, loading: postLoading, fetchData: postFetch } = useApi<GuestData>("POST", `/api/v0/guest/${eventId}/create/`);
