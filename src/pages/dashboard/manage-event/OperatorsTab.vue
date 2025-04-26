@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useApi } from '@/composables/useapi';
-import type { OperatorDataGET , OperatorData } from '@/types/oper';
+import type { OperatorDataGET , OperatorData , OperatorPass } from '@/types/oper';
 
 const route = useRoute();
 const eventId = parseInt(route.params.id as string);
@@ -35,6 +35,26 @@ const deleteOperOfEvent = async (id: number) => {
   }
 };
 
+//TODO
+const ChangePassOper = async (id: number) => {
+  const { data, error, loading, fetchData } = useApi<OperatorPass>(
+    'PUT',
+    `/api/v0/operators/${eventId}/${id}/delete/`
+  );
+
+  const PostBody: OperatorPass = {
+    password: persondata.value.password,
+    password_confirm: persondata.value.password
+  }; 
+
+  try {
+    await fetchData(PostBody);
+    console.log('Deleted!');
+    await load_data(); // Refresh operators
+  } catch (error) {
+    console.error('Failed to delete:', error);
+  }
+};
 
 // Fetch Operators
 const { data, error, loading, fetchData } = useApi<OperatorDataGET[]>(

@@ -162,6 +162,7 @@ const convertToJson = () => {
 
 
   if (jsonData.value && jsonData.value.length > 0) {
+    
     console.log(JSON.stringify(jsonData.value[0], null, 2)); // Pretty-print the object
   } else {
     console.log("jsonData is not populated yet");
