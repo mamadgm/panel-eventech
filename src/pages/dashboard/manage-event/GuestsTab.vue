@@ -4,32 +4,18 @@ import * as XLSX from 'xlsx';
 import { useRoute } from 'vue-router';
 import { useApi } from '@/composables/useapi';
 import { nextTick } from 'vue';
-import type { Guest, GuestData } from '@/types/events';
-
+import StatusUi from '@/components/StatusUi.vue'
+import type { ErrorResponse, Guest, GuestData } from '@/types/events';
 
 const route = useRoute();
 const eventId = route.params.id as string
 
-// Excel File Handling
 const excelFile = ref<File | null>(null);
-
-// Add these to manage user messages
-const successMessage = ref('');
-const errorMessage = ref('');
 
 const jsonData = ref<Guest[]>([]);
 const { data: apiData, error, loading, fetchData } = useApi<GuestData[]>("GET", `/api/v0/guest/${eventId}/`);
-const { data: postData, error: postError, loading: postLoading, fetchData: postFetch } = useApi<GuestData>("POST", `/api/v0/guest/${eventId}/create/`);
-
-// Table Configuration
-const columns = {
-  username: 'کاربر',
-  phone_number: 'شماره تلفن',
-  ticket_number: 'شماره بلیط',
-  status: 'وضعیت',
-  contacts: 'روابط',
-  actions: 'اقدامات',
-};
+const { data: create_post_data, error: create_post_error, loading: create_post_loading, fetchData: create_post_api } = useApi<GuestData>("POST", `/api/v0/guest/${eventId}/create/`);
+const { data: check_post_data, error: check_post_error, loading: check_post_loading, fetchData: check_post_api } = useApi<ErrorResponse>("POST", `/api/v0/guest/${eventId}/check/`);
 
 const filters = ref('');
 
@@ -68,34 +54,62 @@ const filteredData = computed(() => {
   });
 });
 
+const A_create_mess = ref('');
+const A_create_error = ref('');
 const submitEventData = async () => {
-  // Ensure jsonData.value is not null before proceeding
   if (!jsonData.value || jsonData.value.length === 0) {
-    errorMessage.value = '❌ هیچ داده‌ای برای ارسال وجود ندارد';
-    successMessage.value = '';
+    A_create_error.value = 'هیچ داده‌ای برای ارسال وجود ندارد';
+    A_create_mess.value = '';
     return;
   }
 
-  try {
-    // Send only valid data (not null)
-    await postFetch(jsonData.value);
+  A_create_mess.value = '';
+  A_create_error.value = '';
 
-    if (postData.value) {
-      console.log("POST response data:", postData.value);
-      successMessage.value = '✅ مهمانان با موفقیت ثبت شدند';
-      errorMessage.value = '';
-    } else {
-      console.log("POST Error:", postError.value);
-      errorMessage.value = postError.value || '❌ خطا در ثبت مهمانان';
-      successMessage.value = '';
-    }
-  } catch (err) {
-    console.error("Unexpected error during POST request:", err);
-    errorMessage.value = '❌ خطای غیرمنتظره‌ای رخ داد';
-    successMessage.value = '';
+  await create_post_api(jsonData.value); // Only call fetch
+
+  if (create_post_error.value) {
+    A_create_error.value = create_post_error.value;
+  } else if (create_post_data.value) {
+    A_create_mess.value = 'مهمانان با موفقیت ثبت شدند';
+  } else {
+    A_create_error.value = 'خطای غیرمنتظره‌ای رخ داد';
   }
 };
 
+const rowErrors = ref<any[]>([]);  // Declare rowErrors as a ref
+const A_check_mess = ref('');
+const A_check_error = ref('');
+const CheckGuests = async () => {
+  if (!jsonData.value || jsonData.value.length === 0) {
+    A_check_error.value = 'هیچ داده‌ای برای ارسال وجود ندارد';
+    A_check_mess.value = '';
+    return;
+  }
+
+  A_check_mess.value = '';
+  A_check_error.value = '';
+  rowErrors.value = [];
+
+  await check_post_api(jsonData.value); // Only call fetch
+
+  // If there's an error in check_post_error
+  if (check_post_error.value) {
+    // Check if non_field_errors is available and is an array
+    if (check_post_data.value?.non_field_errors && Array.isArray(check_post_data.value?.non_field_errors)) {
+      rowErrors.value = check_post_data.value?.non_field_errors; // Directly assign it
+      console.log("I Assigned");
+    } else {
+      console.error('No non_field_errors or it is not an array');
+    }
+  } else if (check_post_data.value) {
+    A_check_mess.value = 'مهمانان چک شدند ✅'; // Success message
+  } else {
+    A_check_error.value = 'خطای غیرمنتظره‌ای رخ داد'; // General error message for unexpected cases
+  }
+
+
+}
 
 
 // API Data Loading
@@ -162,7 +176,7 @@ const convertToJson = () => {
 
 
   if (jsonData.value && jsonData.value.length > 0) {
-    
+
     console.log(JSON.stringify(jsonData.value[0], null, 2)); // Pretty-print the object
   } else {
     console.log("jsonData is not populated yet");
@@ -238,95 +252,94 @@ function deleteApiGuest(index: number) {
               :disabled="!jsonData" @click="submitEventData">
               ارسال مهمانان
             </button>
+            <!-- Submit Button -->
+            <button type="button" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-green-700 transition"
+              :disabled="!jsonData" @click="CheckGuests">
+              چک کردن مهمانان
+            </button>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- Success & Error messages -->
-    <div v-if="successMessage" class="text-green-600 text-center mt-4 bg-green-100 p-2 rounded">
-      {{ successMessage }}
-    </div>
-    <div v-if="errorMessage" class="text-red-600 text-center mt-4 bg-red-100 p-2 rounded">
-      {{ errorMessage }}
-    </div>
-
+    <StatusUi :message="A_create_mess" :error="A_create_error" :loading="create_post_loading" />
+    <StatusUi :message="A_check_mess" :error="A_check_error" :loading="check_post_loading" />
     <!-- Search Field -->
     <div class="mb-6">
       <input v-model="filters" class="p-2 border border-gray-300 rounded-lg w-full" type="text"
         placeholder="جستجو..." />
     </div>
 
-<!-- Data Table for Fetched and Uploaded Guests -->
-<div v-if="filteredData.length || displayJson.length" class="space-y-12 mt-8">
+    <!-- Data Table for Fetched and Uploaded Guests -->
+    <div v-if="filteredData.length || displayJson.length" class="space-y-12 mt-8">
 
-<!-- Offline Guests (from uploaded Excel) -->
-<div v-if="jsonData.length > 0">
-  <h2 class="text-lg font-bold text-gray-700 mb-4">مهمانان آفلاین (وارد شده از فایل اکسل)</h2>
-  <div class="overflow-x-auto shadow-md rounded-lg">
-    <table class="min-w-full text-sm text-right text-gray-700 bg-white">
-      <thead class="text-xs uppercase bg-yellow-200 text-gray-800">
-        <tr>
-          <th class="px-6 py-3">نام</th>
-          <th class="px-6 py-3">شماره تلفن</th>
-          <th class="px-6 py-3">شماره بلیط</th>
-          <th class="px-6 py-3">اقدامات</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="(item, index) in jsonData"
-          :key="'json-' + item.phone_number + '-' + index"
-          class="border-b last:border-0"
-        >
-          <td class="px-6 py-4">{{ item.first_name }} {{ item.last_name }}</td>
-          <td class="px-6 py-4">{{ item.phone_number }}</td>
-          <td class="px-6 py-4">{{ item.ticket_number }}</td>
-          <td class="px-6 py-4">
-            <button @click="deleteOfflineGuest(index)" class="text-red-500 hover:text-red-600">
-              حذف
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
+      <!-- Offline Guests (from uploaded Excel) -->
+      <div v-if="jsonData.length > 0">
+        <h2 class="text-lg font-bold text-gray-700 mb-4">مهمانان آفلاین (وارد شده از فایل اکسل)</h2>
+        <div class="overflow-x-auto shadow-md rounded-lg">
+          <table class="min-w-full text-sm text-right text-gray-700 bg-white">
+            <thead class="text-xs uppercase bg-yellow-200 text-gray-800">
+              <tr>
+                <th class="px-6 py-3">نام</th>
+                <th class="px-6 py-3">شماره تلفن</th>
+                <th class="px-6 py-3">شماره بلیط</th>
+                <th class="px-6 py-3">اقدامات</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, index) in jsonData" :key="'json-' + item.phone_number + '-' + index"
+                :class="['border-b last:border-0', rowErrors[index] && rowErrors[index].length > 2 ? 'bg-red-50' : '']">
+                <td class="px-6 py-4">{{ item.first_name }} {{ item.last_name }}</td>
+                <td class="px-6 py-4">{{ item.phone_number }}</td>
+                <td class="px-6 py-4">{{ item.ticket_number }}</td>
+                <td class="px-6 py-4">
+                  <div class="flex flex-col gap-2">
+                    <button @click="deleteOfflineGuest(index)" class="text-red-500 hover:text-red-600">
+                      حذف
+                    </button>
+                    <div v-if="rowErrors[index] && Object.keys(rowErrors[index]).length > 0"
+                      class="text-red-600 text-xs mt-1">
+                      {{ rowErrors[index] }}
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
 
-<!-- Online Guests (fetched from API) -->
-<div v-if="filteredData.length > 0">
-  <h2 class="text-lg font-bold text-gray-700 mb-4">مهمانان آنلاین (دریافت شده از سرور)</h2>
-  <div class="overflow-x-auto shadow-md rounded-lg">
-    <table class="min-w-full text-sm text-right text-gray-700 bg-white">
-      <thead class="text-xs uppercase bg-green-300 text-gray-800">
-        <tr>
-          <th class="px-6 py-3">نام</th>
-          <th class="px-6 py-3">شماره تلفن</th>
-          <th class="px-6 py-3">شماره بلیط</th>
-          <th class="px-6 py-3">اقدامات</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="(item, index) in filteredData"
-          :key="'api-' + item.id"
-          class="border-b last:border-0"
-        >
-          <td class="px-6 py-4">{{ item.username }}</td>
-          <td class="px-6 py-4">{{ item.phone_number }}</td>
-          <td class="px-6 py-4">{{ item.ticket_number }}</td>
-          <td class="px-6 py-4">
-            <button @click="deleteApiGuest(item.id)" class="text-red-500 hover:text-red-600">
-              حذف
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
 
-</div>
+          </table>
+        </div>
+      </div>
+
+      <!-- Online Guests (fetched from API) -->
+      <div v-if="filteredData.length > 0">
+        <h2 class="text-lg font-bold text-gray-700 mb-4">مهمانان آنلاین (دریافت شده از سرور)</h2>
+        <div class="overflow-x-auto shadow-md rounded-lg">
+          <table class="min-w-full text-sm text-right text-gray-700 bg-white">
+            <thead class="text-xs uppercase bg-green-300 text-gray-800">
+              <tr>
+                <th class="px-6 py-3">نام</th>
+                <th class="px-6 py-3">شماره تلفن</th>
+                <th class="px-6 py-3">شماره بلیط</th>
+                <th class="px-6 py-3">اقدامات</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, index) in filteredData" :key="'api-' + item.id" class="border-b last:border-0">
+                <td class="px-6 py-4">{{ item.username }}</td>
+                <td class="px-6 py-4">{{ item.phone_number }}</td>
+                <td class="px-6 py-4">{{ item.ticket_number }}</td>
+                <td class="px-6 py-4">
+                  <button @click="deleteApiGuest(item.id)" class="text-red-500 hover:text-red-600">
+                    حذف
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
 
 
     <!-- Uploaded Guests Table with Different Background -->

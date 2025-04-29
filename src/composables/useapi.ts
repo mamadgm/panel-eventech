@@ -31,6 +31,7 @@ export function useApi<T>(
 
       data.value = response.data
     } catch (err: any) {
+      data.value = err.response.data // Store the error details (non_field_errors)
       error.value =
         err.response?.data?.message || err.message || 'An unexpected error occurred'
       console.error('API Error:', err)

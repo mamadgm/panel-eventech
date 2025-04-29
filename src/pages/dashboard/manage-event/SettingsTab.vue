@@ -6,7 +6,8 @@ import DatePicker from 'vue3-persian-datetime-picker';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import Cinema from '@/components/Cinema.vue';
 import { Toaster } from '@/components/ui/sonner';
-import type { Hall  , Event} from '@/types/events';
+import type { Hall, Event } from '@/types/events';
+import StatusUi from '@/components/StatusUi.vue';
 
 const route = useRoute();
 const eventId = route.params.id;
@@ -27,7 +28,7 @@ const positionMatrix = ref<number[][]>([]);
 
 // Fetch existing event
 const { fetchData: getEvent, data: eventData } = useApi<Event>('GET', `/api/v0/core/${eventId}`);
-const { fetchData: patchEvent } = useApi<Event>('PATCH', `/api/v0/core/${eventId}/`);
+const { fetchData: patchEvent  , error : patchEvent_error , loading : patchEvent_load , data : patchEvent_data} = useApi<Event>('PATCH', `/api/v0/core/${eventId}/`);
 const { fetchData: fetchHalls, data: hallsData } = useApi<Hall[]>('GET', '/api/v0/hall/default/');
 const { fetchData: fetchSingleHall, data: singleHallData } = useApi('GET', `/api/v0/hall/default/3/`);
 
@@ -49,14 +50,22 @@ onMounted(async () => {
 });
 
 
+
+const A_create_mess = ref('');
+const A_create_error = ref('');
 const handleSubmit = async () => {
-  try {
-    await patchEvent(event.value);
-    Toaster.success('رویداد با موفقیت ویرایش شد');
-  } catch (err: any) {
-    Toaster.error('ویرایش رویداد با خطا مواجه شد');
-    console.error(err);
+  A_create_error.value = '';
+  A_create_mess.value = '';
+  await patchEvent(event.value);
+
+  if (patchEvent_error.value) {
+    A_create_error.value = patchEvent_error.value;
+  } else if (patchEvent_data.value) {
+    A_create_mess.value = 'رویداد ویرایش شد';
+  } else {
+    A_create_error.value = 'خطای غیرمنتظره‌ای رخ داد';
   }
+
 };
 </script>
 
@@ -101,7 +110,7 @@ const handleSubmit = async () => {
                 {{ hall.name }} - {{ hall.address }}
               </label>
             </div>
-            <Cinema :cinema="positionMatrix" :squareSize="15" />
+            <Cinema :cinema="positionMatrix" :squareSize="15" :height="240"/>
           </template>
         </RadioGroup>
       </div>
@@ -111,13 +120,11 @@ const handleSubmit = async () => {
         <label class="block mb-2 text-sm font-medium text-gray-700">دسته‌بندی‌ها</label>
         <div class="flex flex-col space-y-2">
           <label class="inline-flex items-center">
-            <input type="checkbox" value="دسته اول" v-model="event.categories"
-              class="form-checkbox text-blue-600" />
+            <input type="checkbox" value="دسته اول" v-model="event.categories" class="form-checkbox text-blue-600" />
             <span class="ml-2">دسته اول</span>
           </label>
           <label class="inline-flex items-center">
-            <input type="checkbox" value="دسته دوم" v-model="event.categories"
-              class="form-checkbox text-blue-600" />
+            <input type="checkbox" value="دسته دوم" v-model="event.categories" class="form-checkbox text-blue-600" />
             <span class="ml-2">دسته دوم</span>
           </label>
         </div>
@@ -130,7 +137,7 @@ const handleSubmit = async () => {
           ویرایش رویداد
         </button>
       </div>
+      <StatusUi :message="A_create_mess" :error="A_create_error" :loading="patchEvent_load" />
     </form>
   </div>
 </template>
-

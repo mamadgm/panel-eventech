@@ -4,7 +4,9 @@ import { useApi } from '@/composables/useapi';
 import DatePicker from 'vue3-persian-datetime-picker';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import Cinema from '@/components/Cinema.vue';
-import type { Hall , Event } from '@/types/events';
+import type { Hall, Event } from '@/types/events';
+import StatusUi from '@/components/StatusUi.vue';
+
 
 // Refs for form fields and hall data
 const event = ref<Event>({
@@ -19,7 +21,8 @@ const event = ref<Event>({
 
 const halls = ref<Hall[]>([]); // List of halls
 const { fetchData: fetchhalls, data, loading, error } = useApi<Hall[]>('GET', '/api/v0/hall/default/'); // Get halls via API
-const { fetchData: fetchhall2, data : data_hall2, loading:loading_hall2, error:error2 } = useApi('GET', '/api/v0/hall/default/3/'); // Get halls via API
+const { fetchData: fetchhall2, data: data_hall2, loading: loading_hall2, error: error2 } = useApi('GET', '/api/v0/hall/default/3/'); // Get halls via API
+const { fetchData: createEvent, data: eventData, error: eventError, loading: eventLoading } = useApi<Event>('POST', '/api/v0/core/');
 const positionMatrix = ref<number[][]>([]); // Reactive variable for the cinema prop
 
 // Fetch halls on component mount
@@ -41,28 +44,31 @@ onMounted(async () => {
 });
 
 // Use composable for creating the event
-const { fetchData: createEvent, data: eventData, error: eventError, loading: eventLoading } = useApi<Event>('POST', '/api/v0/core/');
 
 // Handle form submission
+
+
+const A_create_mess = ref('');
+const A_create_error = ref('');
 const handleSubmit = async () => {
-  try {
-    const newEvent = {
-      ...event.value,
-      start_acceptance: event.value.start_acceptance || new Date().toISOString(),
-      start_time: event.value.start_time || new Date().toISOString(),
-      end_time: event.value.end_time || new Date().toISOString(),
-    };
 
-    // Send event creation request via composable
-    await createEvent(newEvent);
+  const newEvent = {
+    ...event.value,
+    start_acceptance: event.value.start_acceptance || new Date().toISOString(),
+    start_time: event.value.start_time || new Date().toISOString(),
+    end_time: event.value.end_time || new Date().toISOString(),
+  };
+  A_create_error.value = '';
+  A_create_mess.value = '';
 
-    if (eventData.value) {
-      console.log('Event created successfully', eventData.value);
-      // Optionally redirect or notify the user
-    }
-  } catch (err: any) {
-    console.error('Error creating event:', err);
-    alert('Failed to create event. Please try again.');
+  await createEvent(newEvent);
+
+  if (eventError.value) {
+    A_create_error.value = eventError.value;
+  } else if (eventData.value) {
+    A_create_mess.value = 'رویداد ایجاد شد';
+  } else {
+    A_create_error.value = 'خطای غیرمنتظره‌ای رخ داد';
   }
 };
 
@@ -109,7 +115,7 @@ const handleSubmit = async () => {
                 {{ hall.name }} - {{ hall.address }}
               </label>
             </div>
-            <Cinema :cinema="positionMatrix" :squareSize="15" />
+            <Cinema :cinema="positionMatrix" :squareSize="15" :height="240"/>
           </template>
         </RadioGroup>
       </div>
@@ -136,6 +142,7 @@ const handleSubmit = async () => {
           ایجاد رویداد
         </button>
       </div>
+      <StatusUi :message="A_create_mess" :error="A_create_error" :loading="eventLoading" />
     </form>
   </div>
 </template>

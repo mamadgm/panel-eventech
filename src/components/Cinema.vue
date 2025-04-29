@@ -3,6 +3,7 @@
 // Props definition with your preferred syntax
 const props = withDefaults(
   defineProps<{
+    height: Number;
     currentHelp?: number; // Optional number
     Selected?: string;    // Optional string
     squareSize?: number; // Define squareSize here
@@ -71,15 +72,15 @@ const handleClick = (rowIndex: number, colIndex: number): void => {
 
 
 <template>
-  <div class="flex flex-col  items-center bg-gray-900 rounded-lg ">
-    <div class="overflow-auto " :style="{
+  <div class="flex flex-col items-center bg-gray-900 rounded-lg p-4" :style="{ height: `${height}px` }">
+    <div class="" :style="{
       width: `${cinema[0].length * squareSize}px`,
       height: `${cinema.length * squareSize}px`
     }">
       <div v-for="(row, rowIndex) in cinema" :key="rowIndex" class="flex">
         <div v-for="(cell, colIndex) in row" :key="colIndex" :class="getCellClass(cell)"
           :style="{ width: `${squareSize}px`, height: `${squareSize}px` }" @click="handleClick(rowIndex, colIndex)">
-          
+
           <div :class="get_hidden(cell)">✔️</div>
         </div>
       </div>

@@ -98,7 +98,7 @@ const submitEventData = async () => {
 
     <div v-else-if="!error">
       <div class="border rounded-lg bg-white p-4 shadow-sm">
-        <CinemaGrid :cinema="cinemaLayout" :squareSize="25" @cellClicked="handleCellClicked" :allowchange="1" />
+        <CinemaGrid :cinema="cinemaLayout" :squareSize="25" @cellClicked="handleCellClicked" :allowchange="1" :height="370"/>
       </div>
 
       <div class="flex justify-center mt-6 gap-4">
