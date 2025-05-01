@@ -46,9 +46,9 @@ const items = [
 // Sidebar open/close state
 const sidebarOpen = ref(true)
 
-const toggleSidebar = () => {
-  sidebarOpen.value = !sidebarOpen.value
-}
+// const toggleSidebar = () => {
+//   sidebarOpen.value = !sidebarOpen.value
+// }
 </script>
 
 <template>
