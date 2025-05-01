@@ -18,17 +18,38 @@ const routes = [
     children: [
       { path: 'create-event', component: CreateProduct },
       { path: 'manage-event', component: ManageEvent },
+      
+      // 🔥 THIS is the correct nested route for event-specific tabs
       {
         path: 'manage-event/:id',
-        component: () => import('@/pages/dashboard/ManageEventDetails.vue'),
-        props: true
+        component: () => import('@/pages/dashboard/ManageEventLayout.vue'),
+        props: true,
+        children: [
+          { path: '', redirect: 'settings' },
+          {
+            path: 'operators',
+            component: () => import('@/pages/dashboard/manage-event/OperatorsTab.vue'),
+          },
+          {
+            path: 'chairs',
+            component: () => import('@/pages/dashboard/manage-event/ChairsTab.vue'),
+          },
+          {
+            path: 'guests',
+            component: () => import('@/pages/dashboard/manage-event/GuestsTab.vue'),
+          },
+          {
+            path: 'settings',
+            component: () => import('@/pages/dashboard/manage-event/SettingsTab.vue'),
+          },
+        ],
       },
       
       { path: 'view-product', component: ViewProduct },
       { path: 'inbox', component: Inbox },
       { path: 'settings', component: Settings },
     ],
-  },
+  }  
 ]
 
 const router = createRouter({

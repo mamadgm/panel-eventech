@@ -4,11 +4,10 @@ import AppSidebar from "@/components/AppSidebar.vue";
 </script>
 
 <template>
-  <SidebarProvider>
+  <SidebarProvider class="w-full">
     <AppSidebar />
     <main class="p-6">
       <SidebarTrigger />
-      <!-- This is where the child routes will be rendered -->
       <router-view />
     </main>
   </SidebarProvider>

@@ -1,79 +1,108 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Calendar, Home, Inbox, Search, Settings } from 'lucide-vue-next'
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from '@/components/ui/sidebar'
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+  type SidebarProps,
+  SidebarRail,
+} from "@/components/ui/sidebar";
 
-// Menu items.
-const items = [
-{
-    title: 'ایجاد رویداد',
-    url: '/dashboard/create-event',
-    icon: Calendar, // You can replace this icon with a different one if needed
-  },
-  {
-    title: 'مدیریت رویداد',
-    url: '/dashboard/manage-event', // Updated to match the new screen
-    icon: Home,
-  },
-  {
-    title: 'صندوق ورودی',
-    url: '/dashboard/inbox',
-    icon: Inbox,
-  },
-
-  {
-    title: 'مشاهده محصولات',
-    url: '/dashboard/view-product',
-    icon: Search, // Use the icon that best fits the page
-  },
-  {
-    title: 'تنظیمات',
-    url: '/dashboard/settings',
-    icon: Settings,
-  },
-]
+import { Calendar, Home, Inbox, Search, Settings } from "lucide-vue-next";
+import { useRoute } from "vue-router";
+import { computed } from "vue";
+import { toast } from 'vue-sonner'
 
 
-// Sidebar open/close state
-const sidebarOpen = ref(true)
+const props = defineProps<SidebarProps>();
+const route = useRoute();
+const activePath = computed(() => route.path);
 
-// const toggleSidebar = () => {
-//   sidebarOpen.value = !sidebarOpen.value
-// }
+
+const data = {
+  navMain: [
+    {
+      title: "ایجاد رویداد",
+      icon: Calendar,
+      url: "/dashboard/create-event", 
+      items: [],
+    },
+    {
+      title: "مدیریت رویداد",
+      icon: Home,
+      url: "/dashboard/manage-event", 
+      items: [
+        {
+          title: "تنظیمات کلی",
+          url: "settings",
+        },
+        {
+          title: "اپراتورها",
+          url: "operators",
+        },
+        {
+          title: "سالن رویداد",
+          url: "chairs",
+        },
+        {
+          title: "لیست شرکت‌کنندگان",
+          url: "guests",
+        },
+      ],
+    },
+  ],
+};
 </script>
 
 <template>
-    <!-- Sidebar with conditional visibility -->
-    <Sidebar v-if="sidebarOpen" class="rtl:mr-auto ltr:ml-auto"> <!-- Example for RTL class handling -->
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>برنامه</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem
-                v-for="item in items"
-                :key="item.title"
-              >
-                <SidebarMenuButton asChild>
-                  <router-link :to="item.url" class="flex items-center gap-2 p-2 hover:bg-gray-200 rounded">
-                    <component :is="item.icon" />
-                    <span>{{ item.title }}</span>
+  <Sidebar v-bind="props">
+    <SidebarHeader>
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton size="lg" as-child>
+            <router-link to="/dashboard">
+              <div class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                <Home class="size-4" />
+              </div>
+              <div class="flex flex-col gap-0.5 leading-none">
+                <span class="font-medium">EvenTech</span>
+                <span>V1.0.0 (beta) </span>
+              </div>
+            </router-link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    </SidebarHeader>
+
+    <SidebarContent>
+      <SidebarGroup>
+        <SidebarMenu>
+          <SidebarMenuItem v-for="item in data.navMain" :key="item.title">
+            <SidebarMenuButton as-child>
+              <a :href="item.url" class="font-medium">
+                {{ item.title }}
+              </a>
+            </SidebarMenuButton>
+            <SidebarMenuSub v-if="item.items.length">
+              <SidebarMenuSubItem v-for="childItem in item.items" :key="childItem.title">
+                <SidebarMenuSubButton as-child :is-active="activePath.includes(`/dashboard/manage-event/${route.params.id}/${childItem.url}`)">
+                  <router-link :to="`/dashboard/manage-event/${route.params.id}/${childItem.url}`">
+                    {{ childItem.title }}
                   </router-link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
-  </template>
-  
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
+            </SidebarMenuSub>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarGroup>
+    </SidebarContent>
+
+    <SidebarRail />
+  </Sidebar>
+</template>

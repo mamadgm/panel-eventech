@@ -1,27 +1,25 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { Card, CardContent } from '@/components/ui/card'
-import { useApi } from '@/composables/useapi'
-import { CalendarClock, CalendarCheck, CalendarX } from 'lucide-vue-next'
+import { ref, onMounted } from "vue";
+import { Card, CardContent } from "@/components/ui/card";
+import { useApi } from "@/composables/useapi";
+import { CalendarClock, CalendarCheck, CalendarX } from "lucide-vue-next";
+import { useRoute } from "vue-router";
 
-const events = ref<any[]>([])
+const events = ref<any[]>([]);
 
-const { data, fetchData } = useApi(
-  'GET',
-  '/api/v0/core/',
-)
+const { data, fetchData } = useApi("GET", "/api/v0/core/");
 
 onMounted(async () => {
-  await fetchData()
+  await fetchData();
   if (data.value) {
-    events.value = Array.isArray(data.value) ? data.value : []
+    events.value = Array.isArray(data.value) ? data.value : [];
   }
-})
+});
 
 const formatDateTime = (dateStr: string) => {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('fa-IR') + ' - ' + date.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })
-}
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("fa-IR") + " - " + date.toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit" });
+};
 </script>
 
 <template>
@@ -34,11 +32,9 @@ const formatDateTime = (dateStr: string) => {
         <!-- Event Title + Tracking -->
         <div class="flex flex-col justify-between w-64 truncate">
           <div class="text-xl font-semibold text-gray-800 truncate">
-            {{ event.name || 'بدون عنوان' }}
+            {{ event.name || "بدون عنوان" }}
           </div>
-          <div class="text-sm text-gray-500">
-            پیگیری: {{ event.tracking_number }}
-          </div>
+          <div class="text-sm text-gray-500">پیگیری: {{ event.tracking_number }}</div>
         </div>
 
         <!-- Date & Time Info -->
@@ -59,23 +55,27 @@ const formatDateTime = (dateStr: string) => {
 
         <!-- Status Pills -->
         <div class="flex flex-col gap-2 px-2">
-          <div :class="[
-            'text-xs px-3 py-1 rounded-lg font-medium text-center',
-            event.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-          ]">
-            فعال: {{ event.is_active ? 'بله' : 'خیر' }}
+          <div
+            :class="[
+              'text-xs px-3 py-1 rounded-lg font-medium text-center',
+              event.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700',
+            ]"
+          >
+            فعال: {{ event.is_active ? "بله" : "خیر" }}
           </div>
-          <div :class="[
-            'text-xs px-3 py-1 rounded-lg font-medium text-center',
-            event.is_started ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-          ]">
-            شروع شده: {{ event.is_started ? 'بله' : 'خیر' }}
+          <div
+            :class="[
+              'text-xs px-3 py-1 rounded-lg font-medium text-center',
+              event.is_started ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700',
+            ]"
+          >
+            شروع شده: {{ event.is_started ? "بله" : "خیر" }}
           </div>
         </div>
 
         <!-- Manage Button -->
         <router-link
-          :to="`/dashboard/manage-event/${event.id}`"
+          :to="`/dashboard/manage-event/${event.id}/settings`"
           class="shrink-0 inline-flex items-center h-14 px-4 text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition"
         >
           مدیریت رویداد
