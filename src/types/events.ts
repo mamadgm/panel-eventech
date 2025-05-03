@@ -1,6 +1,5 @@
 export interface Event {
     name: string;
-    // image: string;
     start_acceptance: string;
     start_time: string;
     end_time: string;
@@ -66,10 +65,37 @@ export interface GuestData {
     is_vip: boolean;
 }
 
+export interface Speaker {
+    id: number;
+    phone_number: string;
+    first_name: string;
+    last_name: string;
+    image: string;
+    email: string;
+}
 
-export interface ErrorResponse {
-    non_field_errors: Array<{
-      [key: string]: string; // The key is dynamic (could be 'ticket_number' or others), and the value is a string.
-    }>;
-  }
-  
+export interface Scene {
+    id: number;
+    speaker: Speaker;
+    name: string;
+    start_time: string;
+    end_time: string;
+    descriptions: string;
+    speaker_first_name: string;
+    speaker_last_name: string;
+    status: boolean;
+}
+
+// This is for the array structure you pointed out
+export type SceneList = Scene[];
+
+// Input version (used in POST/PUT requests)
+export interface SceneInput {
+    speaker: string;
+    name: string;
+    start_time: string;
+    end_time: string;
+    speaker_first_name: string;
+    speaker_last_name: string;
+    descriptions: string;
+}

@@ -42,6 +42,10 @@ const routes = [
             path: 'settings',
             component: () => import('@/pages/dashboard/manage-event/SettingsTab.vue'),
           },
+          {
+            path: 'scenes',
+            component: () => import('@/pages/dashboard/manage-event/Scenes.vue'),
+          },
         ],
       },
       

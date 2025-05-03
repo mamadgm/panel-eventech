@@ -11,9 +11,6 @@ import StatusUi from '@/components/StatusUi.vue';
 
 const route = useRoute();
 const eventId = route.params.id;
-
-
-
 const event = ref<Event>({
   name: '',
   start_acceptance: '',

@@ -54,6 +54,10 @@ const data = {
           title: "لیست شرکت‌کنندگان",
           url: "guests",
         },
+        {
+          title: "سین ها",
+          url: "scenes",
+        },
       ],
     },
   ],

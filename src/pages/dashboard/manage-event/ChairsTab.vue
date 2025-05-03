@@ -16,9 +16,6 @@ const cinemaLayout = ref<number[][]>([[0]]);
 const successMessage = ref('');
 const errorMessage = ref('');
 
-
-
-
 const { data, error, loading, fetchData } = useApi<CinemaData>(
   "GET",
   `/api/v0/hall/event/${eventId}/`,
