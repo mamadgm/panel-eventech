@@ -5,7 +5,7 @@ import { useRoute } from 'vue-router';
 import { useApi } from '@/composables/useapi';
 import { nextTick } from 'vue';
 import StatusUi from '@/components/StatusUi.vue'
-import type { ErrorResponse, Guest, GuestData } from '@/types/events';
+import type {ErrorResponse, Guest, GuestData } from '@/types/events';
 
 const route = useRoute();
 const eventId = route.params.id as string

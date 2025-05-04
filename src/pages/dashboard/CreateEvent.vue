@@ -89,18 +89,18 @@ const handleSubmit = async () => {
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label for="start_acceptance" class="block mb-1 text-sm font-medium text-gray-700">شروع پذیرش</label>
-          <DatePicker v-model="event.start_acceptance" type="datetime" format="YYYY-MM-DD HH:mm:ss"
-            displayFormat="HH:mm:ss jYYYY-jMM-jDD" class="w-full" />
+          <DatePicker v-model="event.start_acceptance" type="datetime" format="YYYY-MM-DD HH:mm:00"
+            displayFormat="HH:mm:00 jYYYY-jMM-jDD" class="w-full" />
         </div>
         <div>
           <label for="start_time" class="block mb-1 text-sm font-medium text-gray-700">زمان شروع</label>
-          <DatePicker v-model="event.start_time" type="datetime" format="YYYY-MM-DD HH:mm:ss"
-            displayFormat="HH:mm:ss jYYYY-jMM-jDD" class="w-full" />
+          <DatePicker v-model="event.start_time" type="datetime" format="YYYY-MM-DD HH:mm:00"
+            displayFormat="HH:mm:00 jYYYY-jMM-jDD" class="w-full" />
         </div>
         <div>
           <label for="end_time" class="block mb-1 text-sm font-medium text-gray-700">زمان پایان</label>
-          <DatePicker v-model="event.end_time" type="datetime" format="YYYY-MM-DD HH:mm:ss"
-            displayFormat="HH:mm:ss jYYYY-jMM-jDD" class="w-full" />
+          <DatePicker v-model="event.end_time" type="datetime" format="YYYY-MM-DD HH:mm:00"
+            displayFormat="HH:mm:00 jYYYY-jMM-jDD" class="w-full" />
         </div>
       </div>
 

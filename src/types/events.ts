@@ -99,3 +99,8 @@ export interface SceneInput {
     speaker_last_name: string;
     descriptions: string;
 }
+export interface ErrorResponse {
+    non_field_errors: Array<{
+        [key: string]: string; // The key is dynamic (could be 'ticket_number' or others), and the value is a string.
+    }>;
+}
