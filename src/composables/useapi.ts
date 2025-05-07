@@ -19,7 +19,8 @@ export function useApi<T>(
       const authStore = useAuthStore()
       const response = await axios({
         method,
-        url: `http://127.0.0.1:8000${endpoint}`,
+        // url: `http://127.0.0.1:8000${endpoint}`,
+        url: `https://apieventech.mammutepd.ir${endpoint}`,
         headers: {
           'Content-Type': 'application/json',
           ...(authStore.accessToken && {

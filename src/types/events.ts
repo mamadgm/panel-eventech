@@ -99,6 +99,37 @@ export interface SceneInput {
     speaker_last_name: string;
     descriptions: string;
 }
+
+
+// src/types/sms.ts
+
+/** What the API returns when you GET the SMS list */
+export interface SmsItem {
+    id: number                     // unique ID
+    title: string
+    text: string
+    datetime_send: string | null       // allow null from the API
+    condition_send_str: string     // human-readable send condition
+    cost: number
+    status: boolean
+    is_vip_str: string             // human-readable VIP filter
+    in_hall_str: string            // human-readable in-hall filter
+    scenes: number[]               // associated scene IDs
+  }
+
+export interface SmsCreatePayload {
+    event: number
+    title: string
+    text: string
+    condition_send: number
+    is_vip: boolean | null
+    in_hall: boolean | null
+    scenes: number[]
+    guests: number[]
+    datetime_send?: string
+  }
+  
+
 export interface ErrorResponse {
     non_field_errors: Array<{
         [key: string]: string; // The key is dynamic (could be 'ticket_number' or others), and the value is a string.

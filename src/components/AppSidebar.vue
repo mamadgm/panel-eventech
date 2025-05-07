@@ -14,29 +14,40 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-vue-next";
+import { Calendar, Home } from "lucide-vue-next";
 import { useRoute } from "vue-router";
 import { computed } from "vue";
-import { toast } from 'vue-sonner'
+import { toast } from "vue-sonner";
+import { useRouter } from 'vue-router';
+import { useAuthStore } from "@/stores/auth"; // adjust path as needed
 
+const authStore = useAuthStore();
+const route = useRoute();
+const mainroute = useRouter();
+
+const handleLogout = () => {
+  // Example logout logic
+  localStorage.removeItem("token"); // or use Pinia/AuthStore etc.
+  authStore.logout();
+  toast.success("با موفقیت خارج شدید");
+  mainroute.push("/login");
+};
 
 const props = defineProps<SidebarProps>();
-const route = useRoute();
 const activePath = computed(() => route.path);
-
 
 const data = {
   navMain: [
     {
       title: "ایجاد رویداد",
       icon: Calendar,
-      url: "/dashboard/create-event", 
+      url: "/dashboard/create-event",
       items: [],
     },
     {
       title: "مدیریت رویداد",
       icon: Home,
-      url: "/dashboard/manage-event", 
+      url: "/dashboard/manage-event",
       items: [
         {
           title: "تنظیمات کلی",
@@ -57,6 +68,10 @@ const data = {
         {
           title: "سین ها",
           url: "scenes",
+        },
+        {
+          title: "مدیریت پیامک",
+          url: "sms",
         },
       ],
     },
@@ -104,6 +119,9 @@ const data = {
             </SidebarMenuSub>
           </SidebarMenuItem>
         </SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton @click="handleLogout" class="text-red-600 hover:bg-red-100 dark:hover:bg-red-900"> خروج </SidebarMenuButton>
+        </SidebarMenuItem>
       </SidebarGroup>
     </SidebarContent>
 

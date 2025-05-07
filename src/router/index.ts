@@ -46,6 +46,10 @@ const routes = [
             path: 'scenes',
             component: () => import('@/pages/dashboard/manage-event/Scenes.vue'),
           },
+          {
+            path: 'sms',
+            component: () => import('@/pages/dashboard/manage-event/Smshandle.vue'),
+          },
         ],
       },
       

@@ -21,7 +21,7 @@ const event = ref<Event>({
 
 const halls = ref<Hall[]>([]); // List of halls
 const { fetchData: fetchhalls, data, loading, error } = useApi<Hall[]>('GET', '/api/v0/hall/default/'); // Get halls via API
-const { fetchData: fetchhall2, data: data_hall2, loading: loading_hall2, error: error2 } = useApi('GET', '/api/v0/hall/default/3/'); // Get halls via API
+const { fetchData: fetchhall2, data: data_hall2, loading: loading_hall2, error: error2 } = useApi('GET', '/api/v0/hall/default/1/'); // Get halls via API
 const { fetchData: createEvent, data: eventData, error: eventError, loading: eventLoading } = useApi<Event>('POST', '/api/v0/core/');
 const positionMatrix = ref<number[][]>([]); // Reactive variable for the cinema prop
 

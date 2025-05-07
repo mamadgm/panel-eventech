@@ -27,7 +27,7 @@ const positionMatrix = ref<number[][]>([]);
 const { fetchData: getEvent, data: eventData } = useApi<Event>('GET', `/api/v0/core/${eventId}`);
 const { fetchData: patchEvent  , error : patchEvent_error , loading : patchEvent_load , data : patchEvent_data} = useApi<Event>('PATCH', `/api/v0/core/${eventId}/`);
 const { fetchData: fetchHalls, data: hallsData } = useApi<Hall[]>('GET', '/api/v0/hall/default/');
-const { fetchData: fetchSingleHall, data: singleHallData } = useApi('GET', `/api/v0/hall/default/3/`);
+const { fetchData: fetchSingleHall, data: singleHallData } = useApi('GET', `/api/v0/hall/default/1/`);
 
 onMounted(async () => {
   await getEvent();

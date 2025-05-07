@@ -9,14 +9,14 @@ const props = withDefaults(
     squareSize?: number; // Define squareSize here
     cinema: number[][];   // 2D array of numbers
     allowchange?: number; // Optional flag for allowing changes
+    mode?: 0|1;           // ← new!
   }>(), {
   currentHelp: 0,
   squareSize: 15,
   allowchange: 0,
+  mode:0 ,
   cinema: () => [
-    [1, 1, 1],
-    [0, 0, 1],
-    [2, -1, 1],
+    [1],
   ], // Wrap the default value in a function
 }
 )
@@ -59,14 +59,33 @@ const get_hidden = (cell: number): string => {
   }
 };
 
-// Handle click to toggle between chair (1) and road (2)
 const handleClick = (rowIndex: number, colIndex: number): void => {
-  if (props.allowchange === 1) {
-    const cellValue = props.cinema[rowIndex][colIndex];
-    // Emit event with cell details
-    emit("cellClicked", { rowIndex, colIndex, cellValue });
+  if (props.allowchange !== 1) return;
+
+  const current = props.cinema[rowIndex][colIndex];
+  let next: number;
+
+  if (props.mode === 0) {
+    // Mode 0: only toggle between 1 and 2
+    if (current === 1) next = 2;
+    else if (current === 2) next = 1;
+    else return;
+
+  } else {
+    // Mode 1: 1 or 2 → 12, and 12 → 1
+    if (current === 12) {
+      next = 1;
+    } else if (current === 1 || current === 2) {
+      next = 12;
+    } else {
+      return;
+    }
   }
+
+  emit("cellClicked", { rowIndex, colIndex, cellValue: next });
 };
+
+
 </script>
 
 

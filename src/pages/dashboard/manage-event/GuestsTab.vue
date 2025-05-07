@@ -17,6 +17,25 @@ const { data: apiData, error, loading, fetchData } = useApi<GuestData[]>("GET", 
 const { data: create_post_data, error: create_post_error, loading: create_post_loading, fetchData: create_post_api } = useApi<GuestData>("POST", `/api/v0/guest/${eventId}/create/`);
 const { data: check_post_data, error: check_post_error, loading: check_post_loading, fetchData: check_post_api } = useApi<ErrorResponse>("POST", `/api/v0/guest/${eventId}/check/`);
 
+//Delete Oper
+const deleteuserfromevent = async (id: number) => {
+  const {
+    data: delete_data,
+    error: error_data,
+    loading: loading_data,
+    fetchData: deleteuser,
+  } = useApi("DELETE", `/api/v0/guest/${eventId}/${id}/delete/`);
+
+  try {
+    await deleteuser();
+    console.log("Deleted!");
+    await load_data(); // Refresh Guests
+  } catch (error) {
+    console.error("Failed to delete:", error);
+  }
+};
+
+
 const filters = ref('');
 
 // Data Transformation
@@ -72,6 +91,7 @@ const submitEventData = async () => {
     A_create_error.value = create_post_error.value;
   } else if (create_post_data.value) {
     A_create_mess.value = 'مهمانان با موفقیت ثبت شدند';
+    await load_data(); // Refresh Guests
   } else {
     A_create_error.value = 'خطای غیرمنتظره‌ای رخ داد';
   }
@@ -116,7 +136,7 @@ const CheckGuests = async () => {
 const load_data = async () => {
   await fetchData();
   if (error.value) {
-    console.error('Error fetching events:', error.value);
+    console.error('Error fetching Guests');
   }
 };
 
@@ -126,7 +146,7 @@ onMounted(async () => {
 
 const downloadPublicFile = () => {
   const link = document.createElement('a');
-  link.href = '/example.xlsx'; // Changed to xlsx
+  link.href = '/example.xlsx';
   link.download = 'example.xlsx';
   document.body.appendChild(link);
   link.click();
@@ -202,13 +222,6 @@ function deleteOfflineGuest(index: number) {
     jsonData.value.splice(index, 1);
   }
 }
-
-function deleteApiGuest(index: number) {
-  console.log('Deleting API guest at index:', index);
-}
-
-
-
 </script>
 
 <template>
@@ -282,6 +295,8 @@ function deleteApiGuest(index: number) {
                 <th class="px-6 py-3">نام</th>
                 <th class="px-6 py-3">شماره تلفن</th>
                 <th class="px-6 py-3">شماره بلیط</th>
+                <th class="px-6 py-3">وضعیت</th>
+                <!-- <th class="px-6 py-3">تایم</th> -->
                 <th class="px-6 py-3">اقدامات</th>
               </tr>
             </thead>
@@ -291,6 +306,8 @@ function deleteApiGuest(index: number) {
                 <td class="px-6 py-4">{{ item.first_name }} {{ item.last_name }}</td>
                 <td class="px-6 py-4">{{ item.phone_number }}</td>
                 <td class="px-6 py-4">{{ item.ticket_number }}</td>
+                <td class="px-6 py-4">{{ item.is_vip }}</td>
+                <!-- <td class="px-6 py-4">{{ item.ticket_registration_datetime }}</td> -->
                 <td class="px-6 py-4">
                   <div class="flex flex-col gap-2">
                     <button @click="deleteOfflineGuest(index)" class="text-red-500 hover:text-red-600">
@@ -329,7 +346,7 @@ function deleteApiGuest(index: number) {
                 <td class="px-6 py-4">{{ item.phone_number }}</td>
                 <td class="px-6 py-4">{{ item.ticket_number }}</td>
                 <td class="px-6 py-4">
-                  <button @click="deleteApiGuest(item.id)" class="text-red-500 hover:text-red-600">
+                  <button @click="deleteuserfromevent(item.id)" class="text-red-500 hover:text-red-600">
                     حذف
                   </button>
                 </td>
