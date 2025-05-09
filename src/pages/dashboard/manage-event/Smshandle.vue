@@ -7,6 +7,7 @@ import StatusUi from "@/components/StatusUi.vue";
 import DatePicker from "vue3-persian-datetime-picker";
 import type { Scene, SceneList } from "@/types/events";
 import type { SmsCreatePayload, SmsItem } from "@/types/events";
+import { toast } from "vue-sonner";
 
 // — route & eventId —
 const route = useRoute();
@@ -58,7 +59,7 @@ watch(
 // — Submit handler —
 const submitSms = async () => {
   if (!form.value.title || !form.value.text) {
-    return alert("عنوان و متن پیامک را پر کنید");
+    return toast("عنوان و متن پیامک را پر کنید");
   }
 
   // 1️⃣ Clone the form
@@ -84,7 +85,7 @@ const submitSms = async () => {
   // 4️⃣ Finally send
   await postSms(payload);
   if (postError.value) {
-    alert("خطا در ایجاد پیامک: " + postError.value);
+    toast("خطا در ایجاد پیامک: " + postError.value);
   } else {
     await getSms();
     smsList.value = smsData.value || [];
@@ -120,6 +121,25 @@ const formatFa = (val: string) => {
     return val;
   }
 };
+
+const deleteSms = async (id: number) => {
+  const {
+    data: delete_data,
+    error: error_data,
+    loading: loading_data,
+    fetchData: deleteOper,
+  } = useApi("DELETE", `/api/v0/sms-service/${eventId}/${id}/delete/`);
+
+  try {
+    await deleteOper();
+    toast("پیامک پاک شد");
+    await getSms();
+    if (smsError.value) loadError.value = smsError.value;
+    else if (smsData.value) smsList.value = smsData.value;
+  } catch (error) {
+    toast("مشکلی پیش آمد");
+  }
+};
 </script>
 
 <template>
@@ -151,11 +171,11 @@ const formatFa = (val: string) => {
         <label class="block font-medium">شرط ارسال</label>
         <select v-model.number="form.condition_send" class="w-full border rounded px-2 py-1">
           <option :value="0">در لحظه</option>
-          <option :value="1">در زمان معین</option>
+          <!-- <option :value="1">در زمان معین</option> -->
           <option :value="2">در صورت حضور به موقع</option>
           <option :value="3">در صورت دیر رسیدن</option>
           <option :value="4">شروع سین</option>
-          <option :value="5">حین اجرای سین</option>
+          <!-- <option :value="5">حین اجرای سین</option> -->
           <option :value="6">پایان سین</option>
         </select>
       </div>
@@ -208,35 +228,55 @@ const formatFa = (val: string) => {
 
   <!-- Existing SMS List -->
   <div class="grid grid-cols-2 gap-4">
-    <div v-for="sms in smsList" :key="sms.id" class="border rounded-lg bg-white shadow justify-between p-8 w-full">
+    <div v-for="sms in smsList" :key="sms.id" class="border rounded-lg bg-white shadow p-6 w-full space-y-3">
+      <!-- Title and Main Text -->
       <div>
-        <h3 class="text-lg font-semibold">{{ sms.title }}</h3>
-        <p class="text-sm text-gray-600">{{ sms.text }}</p>
+        <h3 class="text-lg font-bold text-gray-800">{{ sms.title }}</h3>
+        <p class="text-sm text-gray-600 mt-1">{{ sms.text }}</p>
       </div>
-      <ul class="text-sm mt-2 space-y-1">
-        <!-- If there's a datetime, show it: -->
+
+      <!-- Conditional Info Section -->
+      <ul class="text-sm text-gray-700 space-y-1">
+        <!-- Show send time if available -->
         <li v-if="sms.datetime_send"><strong>ارسال:</strong> {{ formatFa(sms.datetime_send) }}</li>
 
-        <!-- Otherwise, if there are scenes, list them: -->
-        <li v-else-if="sms.scenes.length">
+        <!-- VIP and hall status, shown together only if datetime is null -->
+        <template v-else>
+          <li><strong>وضعیت مهمانان:</strong> {{ sms.is_vip_str }}</li>
+          <li><strong>وضعیت سالن:</strong> {{ sms.in_hall_str }}</li>
+        </template>
+
+        <!-- Show scenes only if present -->
+        <li v-if="sms.scenes.length">
           <strong>سکانس‌ها:</strong>
-          <span class="ml-1 p-2">
-            <template v-for="(sceneId, idx) in sms.scenes"> {{ sceneId }}<span v-if="idx < sms.scenes.length - 1">, </span> </template>
+          <span>
+            <template v-for="(sceneId, idx) in sms.scenes"> {{ sceneId }}<span v-if="idx < sms.scenes.length - 1">، </span> </template>
           </span>
         </li>
 
-        <!-- Fallback in case neither: -->
-        <li v-else><strong>ارسال:</strong> نامشخص</li>
+        <!-- Always show condition -->
         <li><strong>شرط:</strong> {{ sms.condition_send_str }}</li>
 
+        <!-- Always show cost -->
         <li><strong>هزینه:</strong> {{ sms.cost }} تومان</li>
+
+        <!-- Status with badge -->
         <li>
           <strong>وضعیت:</strong>
-          <span :class="sms.status ? 'text-green-700 bg-green-100 px-2 rounded' : 'text-red-700 bg-red-100 px-2 rounded'">
+          <span :class="sms.status ? 'text-green-700 bg-green-100 px-2 py-0.5 rounded' : 'text-red-700 bg-red-100 px-2 py-0.5 rounded'">
             {{ sms.status ? "ارسال شده" : "ارسال نشده" }}
           </span>
         </li>
       </ul>
+      <!-- Delete button -->
+      <div class="mt-4">
+        <button
+          @click="deleteSms(sms.id)"
+          class="text-white bg-red-600 hover:bg-red-700 px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+        >
+          حذف
+        </button>
+      </div>
     </div>
   </div>
 </template>

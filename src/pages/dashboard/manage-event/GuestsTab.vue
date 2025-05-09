@@ -6,6 +6,7 @@ import { useApi } from '@/composables/useapi';
 import { nextTick } from 'vue';
 import StatusUi from '@/components/StatusUi.vue'
 import type {ErrorResponse, Guest, GuestData } from '@/types/events';
+import { toast } from 'vue-sonner';
 
 const route = useRoute();
 const eventId = route.params.id as string
@@ -111,25 +112,59 @@ const CheckGuests = async () => {
   A_check_error.value = '';
   rowErrors.value = [];
 
-  await check_post_api(jsonData.value); // Only call fetch
+  await check_post_api(jsonData.value);
 
-  // If there's an error in check_post_error
   if (check_post_error.value) {
-    // Check if non_field_errors is available and is an array
-    if (check_post_data.value?.non_field_errors && Array.isArray(check_post_data.value?.non_field_errors)) {
-      rowErrors.value = check_post_data.value?.non_field_errors; // Directly assign it
-      console.log("I Assigned");
-    } else {
-      console.error('No non_field_errors or it is not an array');
+    const data = check_post_data.value;
+
+    // Case 1: it's an array of objects (e.g. [{non_field_errors: [...]}, {}, ...])
+    if (Array.isArray(data)) {
+      toast("تکرار داده های ارسالی" , {
+        description: 'در داده های ارسالی جدید شما مشکل است',
+      })
+      const allErrors: string[] = [];
+
+      for (const item of data) {
+        if (
+          item &&
+          typeof item === 'object' &&
+          Array.isArray(item.non_field_errors)
+        ) {
+          allErrors.push(...item.non_field_errors);
+        }
+      }
+
+      if (allErrors.length) {
+        rowErrors.value = allErrors;
+        console.log('Extracted errors from array format:', allErrors);
+        return;
+      }
     }
+
+    // Case 2: it's a single object with non_field_errors
+    if (
+      data &&
+      typeof data === 'object' &&
+      Array.isArray(data.non_field_errors)
+    ) {
+      toast("تکرار داده های دیتابیس" , {
+        description: 'در داده های ارسالی جدید شما با قبلی مشکل است',
+      })
+      rowErrors.value = data.non_field_errors;
+      console.log('Extracted errors from single object:', rowErrors.value);
+      return;
+    }
+
+    // If neither worked:
+    console.error('No valid non_field_errors found in expected formats', data);
+    A_check_error.value = 'خطای ناشناخته‌ای رخ داد در بررسی مهمانان';
   } else if (check_post_data.value) {
-    A_check_mess.value = 'مهمانان چک شدند ✅'; // Success message
+    A_check_mess.value = 'مهمانان چک شدند ✅';
   } else {
-    A_check_error.value = 'خطای غیرمنتظره‌ای رخ داد'; // General error message for unexpected cases
+    A_check_error.value = 'خطای غیرمنتظره‌ای رخ داد';
   }
+};
 
-
-}
 
 
 // API Data Loading
@@ -218,6 +253,7 @@ const displayJson = computed(() => {
 
 
 function deleteOfflineGuest(index: number) {
+  rowErrors.value = [];
   if (jsonData.value && Array.isArray(jsonData.value)) {
     jsonData.value.splice(index, 1);
   }
@@ -296,7 +332,7 @@ function deleteOfflineGuest(index: number) {
                 <th class="px-6 py-3">شماره تلفن</th>
                 <th class="px-6 py-3">شماره بلیط</th>
                 <th class="px-6 py-3">وضعیت</th>
-                <!-- <th class="px-6 py-3">تایم</th> -->
+                
                 <th class="px-6 py-3">اقدامات</th>
               </tr>
             </thead>
@@ -337,6 +373,8 @@ function deleteOfflineGuest(index: number) {
                 <th class="px-6 py-3">نام</th>
                 <th class="px-6 py-3">شماره تلفن</th>
                 <th class="px-6 py-3">شماره بلیط</th>
+                <th class="px-6 py-3">وضعیت</th>
+                <!-- <th class="px-6 py-3">وضعیت</th> -->
                 <th class="px-6 py-3">اقدامات</th>
               </tr>
             </thead>
@@ -345,6 +383,8 @@ function deleteOfflineGuest(index: number) {
                 <td class="px-6 py-4">{{ item.username }}</td>
                 <td class="px-6 py-4">{{ item.phone_number }}</td>
                 <td class="px-6 py-4">{{ item.ticket_number }}</td>
+                <td class="px-6 py-4">{{ item.status }}</td>
+                <!-- <td class="px-6 py-4">{{ item.username }}</td> -->
                 <td class="px-6 py-4">
                   <button @click="deleteuserfromevent(item.id)" class="text-red-500 hover:text-red-600">
                     حذف

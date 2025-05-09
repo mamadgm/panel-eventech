@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { toast } from 'vue-sonner'
 
 // Form fields
 const phone = ref('')
@@ -26,23 +27,52 @@ const authStore = useAuthStore()
 const { data, error, loading, fetchData } = useApi<LoginResponse>('POST', '/api/v0/account/login/password/')
 
 const handleLogin = async () => {
+  // 1) Basic client-side validation
   if (!phone.value || !password.value) {
-    alert('لطفا شماره تلفن و رمز عبور را وارد کنید')
+    toast('لطفا شماره تلفن و رمز عبور را وارد کنید')
+    
     return
   }
 
+  // 2) Fire the request
   await fetchData({
     phone_number: phone.value,
     password: password.value,
   } as LoginRequest)
 
-  if (data.value) {
-    authStore.setToken(data.value.access_token)
+  // 3) First, did axios itself throw (e.g. network / non-2xx status)?
+  if (error.value) {
+    toast('خطای شبکه یا سرور: ' + error.value)
+    return
+  }
+
+  // 4) Now check whether the response body itself is an “error” shape
+  //    (e.g. your backend might respond 200 + { message: 'Invalid creds' })
+  const payload = data.value as any
+  const serverMsg =
+    // common places you might find an error message
+    payload?.message ||
+    payload?.detail ||
+    (Array.isArray(payload?.non_field_errors)
+      ? payload.non_field_errors.join(', ')
+      : null)
+
+  if (serverMsg) {
+    toast('ورود ناموفق: ' + serverMsg)
+    return
+  }
+
+  // 5) Finally, if we made it this far we should have a token
+  if (payload?.access_token) {
+    toast('خوش آمدید')
+    authStore.setToken(payload.access_token)
     router.push('/dashboard/manage-event')
-  } else if (error.value) {
-    alert('ورود ناموفق: ' + error.value)
+  } else {
+    // sanity‐check fallback
+    toast('ورودی نامشخص از سرور؛ لطفاً دوباره تلاش کنید')
   }
 }
+
 </script>
 
 <template>

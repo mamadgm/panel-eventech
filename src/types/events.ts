@@ -132,6 +132,6 @@ export interface SmsCreatePayload {
 
 export interface ErrorResponse {
     non_field_errors: Array<{
-        [key: string]: string; // The key is dynamic (could be 'ticket_number' or others), and the value is a string.
+        [key: string]: string;
     }>;
 }
