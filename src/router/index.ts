@@ -5,6 +5,7 @@ import Dashboard from '@/pages/Dashboard.vue'
 import ManageEvent from '@/pages/dashboard/ManageEvent.vue'
 import CreateProduct from '@/pages/dashboard/CreateEvent.vue'
 import ViewProduct from '@/pages/dashboard/ViewProductScreen.vue'
+
 import Inbox from '@/pages/dashboard/InboxScreen.vue'
 import Settings from '@/pages/dashboard/SettingsScreen.vue'
 
@@ -67,7 +68,7 @@ const router = createRouter({
 
 // 🔐 Navigation Guard
 router.beforeEach((to, from, next) => {
-  const isLoggedIn = !!localStorage.getItem('auth_token') // or your custom logic
+  const isLoggedIn = !!localStorage.getItem("auth_access_token"); // or your custom logic
 
   if (to.meta.requiresAuth && !isLoggedIn) {
     next('/login')

@@ -23,8 +23,8 @@ export function useApi<T>(
         url: `https://apieventech.mammutepd.ir${endpoint}`,
         headers: {
           'Content-Type': 'application/json',
-          ...(authStore.accessToken && {
-            Authorization: `Bearer ${authStore.accessToken}`,
+          ...(authStore.access_token && {
+            Authorization: `Bearer ${authStore.access_token}`,
           }),
         },
         ...(method === 'GET' ? { params: payload } : { data: payload }),
