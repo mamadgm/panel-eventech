@@ -5,15 +5,12 @@ import { Toaster } from "vue-sonner";
 <template>
   <div class="font-sans bg-gray-50 text-gray-900 min-h-screen">
     <Toaster
-      :icons="{
-        
-      }"
+      :icons="{}"
       position="top-center"
       richColors
       :toastOptions="{
         style: { fontSize: '1.1rem' },
-        duration : 2000 , 
-        
+        duration: 2000,
       }"
     />
     <router-view />
