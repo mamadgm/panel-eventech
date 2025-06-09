@@ -15,8 +15,6 @@ const routes = [
     children: [
       { path: "create-event", component: CreateProduct },
       { path: "manage-event", component: ManageEvent },
-
-      // 🔥 THIS is the correct nested route for event-specific tabs
       {
         path: "manage-event/:id",
         component: () => import("@/pages/dashboard/ManageEventLayout.vue"),
