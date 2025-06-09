@@ -33,11 +33,7 @@ const formatDateTime = (dateStr: string) => {
     <Card v-for="event in eventStore.events" :key="event.id" class="w-full min-w-5xl">
       <CardContent class="flex items-center gap-4 p-4 flex-wrap sm:flex-nowrap">
         <!-- Image -->
-        <img
-          :src="event.image || '/cinema.jpg'"
-          alt="Event Image"
-          class="w-28 h-28 object-cover rounded-xl shrink-0"
-        />
+        <img :src="event.image || '/cinema.jpg'" alt="عکس رویداد" class="w-28 h-28 object-cover rounded-xl shrink-0" />
 
         <!-- Event Title + Tracking -->
         <div class="flex flex-col justify-between w-64 truncate">
@@ -67,33 +63,27 @@ const formatDateTime = (dateStr: string) => {
 
         <!-- Status Pills -->
         <div class="flex flex-col gap-2 px-2">
-          <div
-            :class="[
-              'text-xs px-3 py-1 rounded-lg font-medium text-center',
-              event.is_active
-                ? 'bg-green-100 text-green-700'
-                : 'bg-red-100 text-red-700',
-            ]"
-          >
+          <div :class="[
+            'text-xs px-3 py-1 rounded-lg font-medium text-center',
+            event.is_active
+              ? 'bg-green-100 text-green-700'
+              : 'bg-red-100 text-red-700',
+          ]">
             فعال: {{ event.is_active ? "بله" : "خیر" }}
           </div>
-          <div
-            :class="[
-              'text-xs px-3 py-1 rounded-lg font-medium text-center',
-              event.is_started
-                ? 'bg-green-100 text-green-700'
-                : 'bg-red-100 text-red-700',
-            ]"
-          >
+          <div :class="[
+            'text-xs px-3 py-1 rounded-lg font-medium text-center',
+            event.is_started
+              ? 'bg-green-100 text-green-700'
+              : 'bg-red-100 text-red-700',
+          ]">
             شروع شده: {{ event.is_started ? "بله" : "خیر" }}
           </div>
         </div>
 
         <!-- Manage Button -->
-        <router-link
-          :to="`/dashboard/manage-event/${event.id}/settings`"
-          class="shrink-0 inline-flex items-center h-14 px-4 text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition"
-        >
+        <router-link :to="`/dashboard/manage-event/${event.id}/settings`"
+          class="shrink-0 inline-flex items-center h-14 px-4 text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition">
           مدیریت رویداد
         </router-link>
       </CardContent>

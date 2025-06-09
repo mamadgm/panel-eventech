@@ -28,24 +28,37 @@ export const useEventStore = defineStore("event", {
       end_time: "",
       default_hall: 0,
       categories: ["empty1", "empty2"],
-      image: null,
+      image: null as string | File | null, // ✅ Updated type
     },
     events: {} as Record<number, EventGet>,
   }),
   actions: {
     async createEvent() {
-      const payload = this.form;
+      const formData = new FormData();
+      const form = this.form;
+
+      formData.append("name", form.name);
+      formData.append("start_acceptance", form.start_acceptance);
+      formData.append("start_time", form.start_time);
+      formData.append("end_time", form.end_time);
+      formData.append("default_hall", form.default_hall.toString());
+
+      form.categories.forEach((cat) => {
+        formData.append("categories", cat);
+      });
+
+      if (form.image instanceof File) {
+        formData.append("image", form.image);
+      }
+
       const token = useAuthStore().access_token;
 
-      const response = await axios.post(
-        `${API_BASE_URL}/api/v0/core/`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axios.post(`${API_BASE_URL}/api/v0/core/`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       if (response.data) {
         return response.data;
@@ -54,15 +67,33 @@ export const useEventStore = defineStore("event", {
       }
     },
     async UpdateEvent(id: number) {
-      const payload = this.form;
+
+      const formData = new FormData();
+      const form = this.form;
+
+      formData.append("name", form.name);
+      formData.append("start_acceptance", form.start_acceptance);
+      formData.append("start_time", form.start_time);
+      formData.append("end_time", form.end_time);
+      formData.append("default_hall", form.default_hall.toString());
+
+      form.categories.forEach((cat) => {
+        formData.append("categories", cat);
+      });
+
+      if (form.image instanceof File) {
+        formData.append("image", form.image);
+      }
+
       const token = useAuthStore().access_token;
 
       const response = await axios.patch(
         `${API_BASE_URL}/api/v0/core/${id}`,
-        payload,
+        formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
           },
         }
       );
@@ -101,6 +132,7 @@ export const useEventStore = defineStore("event", {
         this.form.end_time = event.end_time;
         this.form.default_hall = 3; // TODO: Get From Rasul
         this.form.categories = event.categories;
+        this.form.image = event.image;
       } else {
         console.error("Event not found with ID", eventId);
         console.log("this.events", this.events);

@@ -9,8 +9,8 @@ const config: Config = {
 	theme: {
 		extend: {
 			fontFamily: {
-				mikh: ["mikh", "sans-serif"],
-				kalame: ["kalame", "sans-serif"],
+				yekan: ["yekan", "sans-serif"],
+				
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

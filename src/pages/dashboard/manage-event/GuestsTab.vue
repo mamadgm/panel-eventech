@@ -1,414 +1,263 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, reactive, onMounted, watch } from 'vue';
 import * as XLSX from 'xlsx';
 import { useRoute } from 'vue-router';
 import { useApi } from '@/composables/useapi';
-import { nextTick } from 'vue';
-import StatusUi from '@/components/StatusUi.vue'
-import type {ErrorResponse, Guest, GuestData } from '@/types/events';
 import { toast } from 'vue-sonner';
+import { Star } from 'lucide-vue-next'
+import { Toggle } from '@/components/ui/toggle'
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+} from '@/components/ui/table';
 
+type Guest = {
+  id?: number;
+  username?: string;
+  first_name?: string;
+  last_name?: string;
+  phone_number?: string;
+  ticket_number: string;
+  is_vip?: boolean;
+};
+
+
+// route & API hooks
 const route = useRoute();
-const eventId = route.params.id as string
+const eventId = route.params.id as string;
+const { data: apiData, fetchData } = useApi<Guest[]>('GET', `/api/v0/guest/${eventId}/`);
+const { fetchData: createGuests } = useApi<Guest[]>('POST', `/api/v0/guest/${eventId}/create/`);
 
-const excelFile = ref<File | null>(null);
+// state
+const onlineGuests = ref<Guest[]>([]);
+const offlineGuests = ref<Guest[]>([]);
+const errors = reactive<Record<string, string[]>>({});
 
-const jsonData = ref<Guest[]>([]);
-const { data: apiData, error, loading, fetchData } = useApi<GuestData[]>("GET", `/api/v0/guest/${eventId}/`);
-const { data: create_post_data, error: create_post_error, loading: create_post_loading, fetchData: create_post_api } = useApi<GuestData>("POST", `/api/v0/guest/${eventId}/create/`);
-const { data: check_post_data, error: check_post_error, loading: check_post_loading, fetchData: check_post_api } = useApi<ErrorResponse>("POST", `/api/v0/guest/${eventId}/check/`);
-
-//Delete Oper
-const deleteuserfromevent = async (id: number) => {
-  const {
-    data: delete_data,
-    error: error_data,
-    loading: loading_data,
-    fetchData: deleteuser,
-  } = useApi("DELETE", `/api/v0/guest/${eventId}/${id}/delete/`);
-
-  try {
-    await deleteuser();
-    console.log("Deleted!");
-    await load_data(); // Refresh Guests
-  } catch (error) {
-    console.error("Failed to delete:", error);
-  }
-};
-
-
-const filters = ref('');
-
-// Data Transformation
-const users = computed(() => {
-  const sourceData = apiData.value || [];
-  return sourceData.map((item: any) => ({
-    id: item.id || Math.random().toString(36).substring(2, 9),
-    username: item.username || `${item.first_name || ''} ${item.last_name || ''}`.trim(),
-    position: item.position || (item.is_vip ? 'VIP' : 'عادی'),
-    phone_number: item.phone_number || '',
-    ticket_number: item.ticket_number || '',
-    status: item.status || (item.is_vip ? 'VIP' : 'عادی'),
-    picture: item.picture || '',
-    initials: item.initials || (item.first_name?.[0] || '') + (item.last_name?.[0] || ''),
-    color: item.color || (item.is_vip ? 'primary' : 'info'),
-    contacts: item.contacts || [],
-    location: item.location || '',
-    industry: item.industry || '',
-    badge: item.badge || (item.is_vip ? 'VIP' : undefined),
-  }));
-});
-
-const filteredData = computed(() => {
-  if (!filters.value) return users.value;
-  const filterRe = new RegExp(filters.value, 'i');
-  return users.value.filter((item: any) => {
-    return (
-      (item.username && item.username.match(filterRe)) ||
-      (item.position && item.position.match(filterRe)) ||
-      (item.phone_number && item.phone_number.match(filterRe)) ||
-      (item.ticket_number && item.ticket_number.match(filterRe)) ||
-      (item.status && item.status.match(filterRe)) ||
-      (item.location && item.location.match(filterRe))
-    );
-  });
-});
-
-const A_create_mess = ref('');
-const A_create_error = ref('');
-const submitEventData = async () => {
-  if (!jsonData.value || jsonData.value.length === 0) {
-    A_create_error.value = 'هیچ داده‌ای برای ارسال وجود ندارد';
-    A_create_mess.value = '';
-    return;
-  }
-
-  A_create_mess.value = '';
-  A_create_error.value = '';
-
-  await create_post_api(jsonData.value); // Only call fetch
-
-  if (create_post_error.value) {
-    A_create_error.value = create_post_error.value;
-  } else if (create_post_data.value) {
-    A_create_mess.value = 'مهمانان با موفقیت ثبت شدند';
-    await load_data(); // Refresh Guests
-  } else {
-    A_create_error.value = 'خطای غیرمنتظره‌ای رخ داد';
-  }
-};
-
-const rowErrors = ref<any[]>([]);  // Declare rowErrors as a ref
-const A_check_mess = ref('');
-const A_check_error = ref('');
-const CheckGuests = async () => {
-  if (!jsonData.value || jsonData.value.length === 0) {
-    A_check_error.value = 'هیچ داده‌ای برای ارسال وجود ندارد';
-    A_check_mess.value = '';
-    return;
-  }
-
-  A_check_mess.value = '';
-  A_check_error.value = '';
-  rowErrors.value = [];
-
-  await check_post_api(jsonData.value);
-
-  if (check_post_error.value) {
-    const data = check_post_data.value;
-
-    // Case 1: it's an array of objects (e.g. [{non_field_errors: [...]}, {}, ...])
-    if (Array.isArray(data)) {
-      toast("تکرار داده های ارسالی" , {
-        description: 'در داده های ارسالی جدید شما مشکل است',
-      })
-      const allErrors: string[] = [];
-
-      for (const item of data) {
-        if (
-          item &&
-          typeof item === 'object' &&
-          Array.isArray(item.non_field_errors)
-        ) {
-          allErrors.push(...item.non_field_errors);
-        }
-      }
-
-      if (allErrors.length) {
-        rowErrors.value = allErrors;
-        console.log('Extracted errors from array format:', allErrors);
-        return;
-      }
-    }
-
-    // Case 2: it's a single object with non_field_errors
-    if (
-      data &&
-      typeof data === 'object' &&
-      Array.isArray(data.non_field_errors)
-    ) {
-      toast("تکرار داده های دیتابیس" , {
-        description: 'در داده های ارسالی جدید شما با قبلی مشکل است',
-      })
-      rowErrors.value = data.non_field_errors;
-      console.log('Extracted errors from single object:', rowErrors.value);
-      return;
-    }
-
-    // If neither worked:
-    console.error('No valid non_field_errors found in expected formats', data);
-    A_check_error.value = 'خطای ناشناخته‌ای رخ داد در بررسی مهمانان';
-  } else if (check_post_data.value) {
-    A_check_mess.value = 'مهمانان چک شدند ✅';
-  } else {
-    A_check_error.value = 'خطای غیرمنتظره‌ای رخ داد';
-  }
-};
-
-
-
-// API Data Loading
-const load_data = async () => {
-  await fetchData();
-  if (error.value) {
-    console.error('Error fetching Guests');
-  }
-};
-
+// load online on mount
 onMounted(async () => {
-  await load_data();
+  await fetchData();
+  onlineGuests.value = apiData.value || [];
 });
 
-const downloadPublicFile = () => {
-  const link = document.createElement('a');
-  link.href = '/example.xlsx';
-  link.download = 'example.xlsx';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
+// re-validate whenever either list changes
+watch(
+  [onlineGuests, offlineGuests],
+  () => validateAll(),
+  { deep: true }
+);
 
-const handleFileUpload = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  if (target.files && target.files.length > 0) {
-    excelFile.value = target.files[0];
-    jsonData.value = []; // Reset previous JSON data
-  }
-};
+// validation
+function validateAll() {
+  // clear
+  for (const k in errors) delete errors[k];
 
-const convertToJson = () => {
-  if (!excelFile.value) return;
+  // collect tickets
+  const entries: { ticket: string; key: string }[] = [];
+  onlineGuests.value.forEach(g => {
+    entries.push({ ticket: g.ticket_number, key: `online-${g.id}` });
+  });
+  offlineGuests.value.forEach((g, i) => {
+    entries.push({ ticket: g.ticket_number, key: `offline-${i}` });
+  });
 
+  // find duplicates
+  const seen = new Map<string, string>();
+  entries.forEach(({ ticket, key }) => {
+    if (!ticket) return;
+    if (seen.has(ticket)) {
+      const other = seen.get(ticket)!;
+      (errors[other] ??= []).push('شماره بلیط تکراری');
+      (errors[key] ??= []).push('شماره بلیط تکراری');
+    } else {
+      seen.set(ticket, key);
+    }
+  });
+}
+
+// file upload handler
+function onUpload(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (!file) return;
   const reader = new FileReader();
-
-  reader.onload = (e) => {
-    const data = e.target?.result;
-    const workbook = XLSX.read(data, { type: 'array' });
-    const firstSheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[firstSheetName];
-    const excelData = XLSX.utils.sheet_to_json(worksheet);
-
-    // Ensure the transformed data matches the `Guest` type
-    jsonData.value = excelData.map((item: any) => ({
-      event: eventId, // Ensure this is a string
-      first_name: item.first_name || '',
-      last_name: item.last_name || '',
-      phone_number: item.phone_number
-        ? item.phone_number.toString().length === 10
-          ? '0' + item.phone_number.toString()
-          : item.phone_number.toString()
-        : '',
-      email: item.email || '',
-      ticket_number: item.ticket_number || '',
-      ticket_registration_datetime: new Date().toISOString(),
-      is_vip: item.is_vip === "TRUE" || item.is_vip === true,
+  reader.onload = () => {
+    const wb = XLSX.read(reader.result as ArrayBuffer, { type: 'array' });
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const data = XLSX.utils.sheet_to_json<Record<string, any>>(sheet);
+    offlineGuests.value = data.map((row) => ({
+      first_name: row.first_name || '',
+      last_name: row.last_name || '',
+      phone_number: row.phone_number || '',
+      ticket_number: String(row.ticket_number || ''),
+      is_vip: !!row.is_vip,
     }));
 
-    nextTick(() => {
-      console.log("Data rendered in the DOM:", jsonData.value); // Check if data is reflected in DOM after update
-    });
   };
+  reader.readAsArrayBuffer(file);
+}
 
+// delete online
+function delOnline(id?: number) {
+  onlineGuests.value = onlineGuests.value.filter(g => g.id !== id);
+}
 
-  if (jsonData.value && jsonData.value.length > 0) {
-
-    console.log(JSON.stringify(jsonData.value[0], null, 2)); // Pretty-print the object
-  } else {
-    console.log("jsonData is not populated yet");
+// submit combined
+async function submitAll() {
+  if (Object.keys(errors).length) {
+    toast.error('لطفاً خطاهای جدول را برطرف کنید');
+    return;
   }
-
-
-
-  reader.onerror = () => {
-    alert('Error reading file');
-  };
-
-  reader.readAsArrayBuffer(excelFile.value);
-};
-
-const displayJson = computed(() => {
-  if (!jsonData.value) return [];
-  return jsonData.value.map(({ event, ticket_registration_datetime, ...rest }) => rest);
-});
-
-
-function deleteOfflineGuest(index: number) {
-  rowErrors.value = [];
-  if (jsonData.value && Array.isArray(jsonData.value)) {
-    jsonData.value.splice(index, 1);
+  const payload = [...onlineGuests.value, ...offlineGuests.value];
+  try {
+    await createGuests(payload);
+    toast.success('مهمانان با موفقیت ارسال شدند');
+    // optionally refresh
+    await fetchData();
+    onlineGuests.value = apiData.value || [];
+    offlineGuests.value = [];
+  } catch {
+    toast.error('ارسال مهمانان ناموفق بود');
   }
 }
+
+const toBoolean = (val: unknown): boolean => {
+  if (typeof val === 'string') {
+    const v = val.trim().toLowerCase();
+    return v === 'vip' || v === 'ویژه';
+  }
+  return val === true || val === 1;
+};
+
+
 </script>
 
 <template>
-  <div>
-    <!-- File Upload Section with Structured Buttons -->
-    <div class="stepper-form">
-      <div class="form-sections">
-        <div class="flex flex-wrap items-center justify-between gap-4 mb-6 p-4 rounded-lg">
-          <div class="flex items-center gap-4">
-            <!-- Download Sample Button -->
-            <button @click="downloadPublicFile"
-              class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
-              دانلود نمونه فایل
-            </button>
+  <div class="space-y-6 p-6 bg-gray-50">
+    <!-- File Upload -->
+    <div class="flex items-center gap-4">
+      <Label for="file-upload"
+        class="cursor-pointer flex items-center gap-2 bg-gray-100 hover:bg-gray-200 rounded-md px-4 py-2 text-sm font-medium text-gray-700 shadow-sm">
+        انتخاب فایل اکسل
+      </Label>
+      <input id="file-upload" type="file" accept=".xlsx, .xls" class="hidden" @change="onUpload" />
+      <span v-if="offlineGuests.length" class="text-xs text-gray-600">
+        {{ offlineGuests.length }} ردیف آماده بررسی
+      </span>
+    </div>
 
-            <!-- File Upload Button -->
-            <div class="relative inline-block">
-              <label
-                class="flex items-center gap-2 cursor-pointer px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-sm font-medium text-gray-700 shadow-sm transition">
-                <i class="fas fa-cloud-upload-alt text-blue-500"></i>
-                <span>انتخاب فایل اکسل</span>
-                <input type="file" accept=".xlsx, .xls" @change="handleFileUpload"
-                  class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-              </label>
-              <span v-if="excelFile" class="block mt-2 text-xs text-gray-600 text-center">
-                {{ excelFile.name }}
+
+
+    <!-- Offline Guests -->
+    <div class="mt-8">
+      <h2 class="text-lg font-bold text-gray-700 mb-2">مهمانان آفلاین</h2>
+      <Table class="min-w-full bg-white rounded-lg shadow" dir="rtl">
+        <TableBody class="bg-gray-200">
+          <TableRow>
+            <TableCell class="cells">نام</TableCell>
+            <TableCell class="cells">نام خانوادگی</TableCell>
+            <TableCell class="cells">موبایل</TableCell>
+            <TableCell class="cells">شماره بلیط</TableCell>
+            <TableCell class="cells">نوع بلیط</TableCell>
+            <TableCell class="cells">اقدامات</TableCell>
+          </TableRow>
+        </TableBody>
+        <TableBody>
+          <TableRow v-for="(g, i) in offlineGuests" :key="i" :class="errors[`offline-${i}`]?.length ? 'bg-red-50' : ''">
+            <TableCell class="cells w-1/5">
+              <Input v-model="g.first_name" placeholder="نام" size="lg" />
+            </TableCell>
+            <TableCell class="cells w-1/5">
+              <Input v-model="g.last_name" placeholder="نام خانوادگی" size="sm" />
+            </TableCell>
+            <TableCell class="cells w-1/5">
+              <Input v-model="g.phone_number" placeholder="موبایل" size="sm" />
+            </TableCell>
+            <TableCell class="cells w-1/5">
+              <Input v-model="g.ticket_number" placeholder="شماره بلیط" size="sm" />
+              <div v-if="errors[`offline-${i}`]" class="text-red-600 text-xs mt-1">
+                {{ errors[`offline-${i}`].join(', ') }}
+              </div>
+            </TableCell>
+            <TableCell class="cells text-center">
+              <span @click="g.is_vip = !toBoolean(g.is_vip)"
+                class="w-18 inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold cursor-pointer select-none transition-colors"
+                :class="toBoolean(g.is_vip) ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
+                role="button" tabindex="0" @keydown.enter="g.is_vip = !toBoolean(g.is_vip)">
+                <Star class="w-4 h-4 ml-1" />
+                {{ toBoolean(g.is_vip) ? 'ویژه' : 'عادی' }}
               </span>
-            </div>
-
-          </div>
-
-          <div class="flex items-center gap-4">
-            <!-- Convert to JSON Button -->
-            <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-              :disabled="!excelFile" @click="convertToJson">
-              تبدیل به مهمان
-            </button>
-
-            <!-- Submit Button -->
-            <button type="button" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
-              :disabled="!jsonData" @click="submitEventData">
-              ارسال مهمانان
-            </button>
-            <!-- Submit Button -->
-            <button type="button" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-green-700 transition"
-              :disabled="!jsonData" @click="CheckGuests">
-              چک کردن مهمانان
-            </button>
-          </div>
-        </div>
-      </div>
+            </TableCell>
+            <TableCell class="cells w-1/6">
+              <Button variant="destructive" size="sm" @click="offlineGuests.splice(i, 1)">
+                حذف
+              </Button>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
     </div>
-    <StatusUi :message="A_create_mess" :error="A_create_error" :loading="create_post_loading" />
-    <StatusUi :message="A_check_mess" :error="A_check_error" :loading="check_post_loading" />
-    <!-- Search Field -->
-    <div class="mb-6">
-      <input v-model="filters" class="p-2 border border-gray-300 rounded-lg w-full" type="text"
-        placeholder="جستجو..." />
-    </div>
+    <!-- Online Guests -->
+    <div>
+      <h2 class="text-lg font-bold text-gray-700 mb-2">مهمانان آنلاین</h2>
+      <Table class="min-w-full bg-white rounded-lg shadow" dir="rtl">
+        <TableBody class="bg-gray-200">
+          <TableRow>
+            <TableCell class="cells">نام</TableCell>
+            <TableCell class="cells">نام خانوادگی</TableCell>
+            <TableCell class="cells">موبایل</TableCell>
+            <TableCell class="cells">شماره بلیط</TableCell>
+            <TableCell class="cells">نوع بلیط</TableCell>
+            <TableCell class="cells">اقدامات</TableCell>
+          </TableRow>
+        </TableBody>
+        <TableBody>
+          <TableRow v-for="g in onlineGuests" :key="g.id" :class="errors[`online-${g.id}`]?.length ? 'bg-red-50' : ''">
+            <TableCell class="cells">{{ g.first_name || '-' }}</TableCell>
+            <TableCell class="cells">{{ g.last_name || '-' }}</TableCell>
+            <TableCell class="cells">{{ g.phone_number || '-' }}</TableCell>
+            <TableCell class="cells w-1/4"> {{ g.ticket_number }}</TableCell>
+            <TableCell class="cells text-center">
+              <span
+                class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold cursor-default select-none w-18"
+                :class="toBoolean(g.is_vip) ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-600'">
 
-    <!-- Data Table for Fetched and Uploaded Guests -->
-    <div v-if="filteredData.length || displayJson.length" class="space-y-12 mt-8">
-
-      <!-- Offline Guests (from uploaded Excel) -->
-      <div v-if="jsonData.length > 0">
-        <h2 class="text-lg font-bold text-gray-700 mb-4">مهمانان آفلاین (وارد شده از فایل اکسل)</h2>
-        <div class="overflow-x-auto shadow-md rounded-lg">
-          <table class="min-w-full text-sm text-right text-gray-700 bg-white">
-            <thead class="text-xs uppercase bg-yellow-200 text-gray-800">
-              <tr>
-                <th class="px-6 py-3">نام</th>
-                <th class="px-6 py-3">شماره تلفن</th>
-                <th class="px-6 py-3">شماره بلیط</th>
-                <th class="px-6 py-3">وضعیت</th>
-                
-                <th class="px-6 py-3">اقدامات</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(item, index) in jsonData" :key="'json-' + item.phone_number + '-' + index"
-                :class="['border-b last:border-0', rowErrors[index] && rowErrors[index].length > 2 ? 'bg-red-50' : '']">
-                <td class="px-6 py-4">{{ item.first_name }} {{ item.last_name }}</td>
-                <td class="px-6 py-4">{{ item.phone_number }}</td>
-                <td class="px-6 py-4">{{ item.ticket_number }}</td>
-                <td class="px-6 py-4">{{ item.is_vip }}</td>
-                <!-- <td class="px-6 py-4">{{ item.ticket_registration_datetime }}</td> -->
-                <td class="px-6 py-4">
-                  <div class="flex flex-col gap-2">
-                    <button @click="deleteOfflineGuest(index)" class="text-red-500 hover:text-red-600">
-                      حذف
-                    </button>
-                    <div v-if="rowErrors[index] && Object.keys(rowErrors[index]).length > 0"
-                      class="text-red-600 text-xs mt-1">
-                      {{ rowErrors[index] }}
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-
-
-          </table>
-        </div>
-      </div>
-
-      <!-- Online Guests (fetched from API) -->
-      <div v-if="filteredData.length > 0">
-        <h2 class="text-lg font-bold text-gray-700 mb-4">مهمانان آنلاین (دریافت شده از سرور)</h2>
-        <div class="overflow-x-auto shadow-md rounded-lg">
-          <table class="min-w-full text-sm text-right text-gray-700 bg-white">
-            <thead class="text-xs uppercase bg-green-300 text-gray-800">
-              <tr>
-                <th class="px-6 py-3">نام</th>
-                <th class="px-6 py-3">شماره تلفن</th>
-                <th class="px-6 py-3">شماره بلیط</th>
-                <th class="px-6 py-3">وضعیت</th>
-                <!-- <th class="px-6 py-3">وضعیت</th> -->
-                <th class="px-6 py-3">اقدامات</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(item, index) in filteredData" :key="'api-' + item.id" class="border-b last:border-0">
-                <td class="px-6 py-4">{{ item.username }}</td>
-                <td class="px-6 py-4">{{ item.phone_number }}</td>
-                <td class="px-6 py-4">{{ item.ticket_number }}</td>
-                <td class="px-6 py-4">{{ item.status }}</td>
-                <!-- <td class="px-6 py-4">{{ item.username }}</td> -->
-                <td class="px-6 py-4">
-                  <button @click="deleteuserfromevent(item.id)" class="text-red-500 hover:text-red-600">
-                    حذف
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
+                <Star class="w-4 h-4 ml-1" />
+                {{ toBoolean(g.is_vip) ? 'ویژه' : 'عادی' }}
+              </span>
+            </TableCell>
+            <TableCell class="cells w-1/6">
+              <Button variant="destructive" size="sm" @click="delOnline(g.id)">
+                حذف
+              </Button>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
     </div>
 
 
-    <!-- Uploaded Guests Table with Different Background -->
-    <div v-else>
-      <div class="text-center">لطفاً فایل اکسل را بارگذاری و تبدیل کنید</div>
+    <!-- Submit -->
+    <div class="text-right">
+      <Button :disabled="Object.keys(errors).length > 0 || !offlineGuests.length" @click="submitAll">
+        ارسال مهمانان
+
+      </Button>
     </div>
   </div>
 </template>
 
 
+
 <style scoped>
-input[type="file"] {
-  display: none;
+.cells {
+  padding-left: calc(var(--spacing) * 12);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: cadetblue;
 }
 </style>
