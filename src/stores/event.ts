@@ -29,6 +29,7 @@ export const useEventStore = defineStore("event", {
       default_hall: 0,
       categories: ["empty1", "empty2"],
       image: null as string | File | null, // ✅ Updated type
+      
     },
     events: {} as Record<number, EventGet>,
   }),

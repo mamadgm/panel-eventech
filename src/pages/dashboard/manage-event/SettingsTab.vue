@@ -81,7 +81,7 @@ const imageUrl = computed(() => {
 </script>
 
 <template>
-  <div class="p-6 max-w-3xl mx-auto bg-white shadow-lg rounded-xl">
+  <div class="p-6 max-w-4xl mx-auto bg-white shadow-lg rounded-xl">
     <h1 class="text-3xl font-bold text-right mb-6">ویرایش رویداد</h1>
     <form @submit.prevent="handleSubmit" class="space-y-6 text-right">
       <!-- Event Name -->

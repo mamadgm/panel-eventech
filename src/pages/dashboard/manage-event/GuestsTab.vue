@@ -8,6 +8,7 @@ import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import axios from "axios";
 import { API_BASE_URL } from "@/types/const";
 import { useAuthStore } from "@/stores/auth";
@@ -18,7 +19,6 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
-
 // state
 const onlineGuests = ref<Guest[]>([]);
 const offlineGuests = ref<Guest[]>([]);
@@ -33,7 +33,10 @@ type Guest = {
   last_name?: string;
   phone_number?: string;
   ticket_number: string;
+  event: string;
+  ticket_registration_datetime: string;
   is_vip?: boolean;
+  checked: boolean; // ✅ Add this line
 };
 
 // route & API hooks
@@ -55,7 +58,7 @@ const deleteuserfromevent = async (id: number) => {
 
   try {
     await deleteuser();
-    toast.info("مهمان حذف شد");
+    toast.warning("مهمان حذف شد");
     await fetchData(); // Refresh Guests
     onlineGuests.value = apiData.value || [];
     originalGuests.value = JSON.parse(JSON.stringify(apiData.value || [])); // deep clone
@@ -121,25 +124,72 @@ function validateAll() {
   });
 }
 
-// file upload handler
+function normalizePhoneNumber(input: string | number): string {
+  const raw = String(input).replace(/\D/g, ""); // remove non-digit characters
+
+  // Match and normalize different acceptable formats
+  if (/^(\+98|0098|098|98)?9\d{9}$/.test(raw)) {
+    return "0" + raw.slice(-10); // ensure it starts with '0' and is 11 digits
+  }
+
+  return ""; // invalid number
+}
+
 function onUpload(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0];
   if (!file) return;
   const reader = new FileReader();
+
   reader.onload = () => {
     const wb = XLSX.read(reader.result as ArrayBuffer, { type: "array" });
     const sheet = wb.Sheets[wb.SheetNames[0]];
     const data = XLSX.utils.sheet_to_json<Record<string, any>>(sheet);
-    offlineGuests.value = data.map((row) => ({
-      first_name: row.first_name || "",
-      last_name: row.last_name || "",
-      phone_number: row.phone_number || "",
-      ticket_number: String(row.ticket_number || ""),
-      is_vip: !!row.is_vip,
-    }));
+
+    offlineGuests.value = data.map((row) => {
+      const normalizedPhone = normalizePhoneNumber(row.phone_number);
+
+      return {
+        first_name: row.first_name || "",
+        last_name: row.last_name || "",
+        phone_number: normalizedPhone,
+        ticket_number: String(row.ticket_number || "") + "test3",
+        is_vip: toBoolean(row.is_vip || row.is_true),
+        event: eventId,
+        ticket_registration_datetime: getCurrentIranTime(),
+        checked: false,
+      };
+    });
   };
+
   reader.readAsArrayBuffer(file);
 }
+
+function getCurrentIranTime(): string {
+  const now = new Date();
+
+  // Iran time is UTC+3:30
+  const iranOffset = 3.5 * 60; // minutes
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const iranDate = new Date(utc + iranOffset * 60000);
+
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  return (
+    iranDate.getFullYear() +
+    "-" +
+    pad(iranDate.getMonth() + 1) +
+    "-" +
+    pad(iranDate.getDate()) +
+    "T" +
+    pad(iranDate.getHours()) +
+    ":" +
+    pad(iranDate.getMinutes()) +
+    ":" +
+    pad(iranDate.getSeconds()) +
+    "+03:30"
+  );
+}
+
 // State
 const isSubmitting = ref(false);
 const currentBatch = ref(0);
@@ -166,13 +216,20 @@ async function submitAll() {
   isSubmitting.value = true;
   totalBatches.value = chunks.length;
 
+  const headers = {
+    "Content-Type": "application/json",
+    ...(authStore.access_token && {
+      Authorization: `Bearer ${authStore.access_token}`,
+    }),
+  };
   try {
     for (let i = 0; i < chunks.length; i++) {
       currentBatch.value = i + 1;
 
       await axios.post(
         `${API_BASE_URL}/api/v0/guest/${eventId}/create/`,
-        chunks[i]
+        chunks[i],
+        { headers }
       );
     }
 
@@ -194,11 +251,30 @@ async function submitAll() {
 }
 
 const toBoolean = (val: unknown): boolean => {
+  console.log(`toBoolean input: ${JSON.stringify(val)} (type: ${typeof val})`);
+
   if (typeof val === "string") {
     const v = val.trim().toLowerCase();
-    return v === "vip" || v === "ویژه";
+    const result = v === "true";
+    console.log(`toBoolean processed string: "${v}", output: ${result}`);
+    return result;
   }
-  return val === true || val === 1;
+
+  if (typeof val === "boolean") {
+    console.log(`toBoolean input is boolean: ${val}`);
+    return val;
+  }
+
+  if (typeof val === "number") {
+    // Optional: treat 1 as true, 0 as false
+    const result = val === 1;
+    console.log(`toBoolean processed number: ${val}, output: ${result}`);
+    return result;
+  }
+
+  // For other types (null, undefined, objects), return false
+  console.log(`toBoolean output: false (default fallback)`);
+  return false;
 };
 
 // toggle VIP inline
@@ -231,7 +307,9 @@ async function editOnline(index: number) {
         last_name: g.last_name,
         phone_number: g.phone_number,
         ticket_number: g.ticket_number,
-        is_vip: toBoolean(g.is_vip) ? "ویژه" : "",
+        is_vip: toBoolean(g.is_vip), // Use toBoolean to ensure valid value        
+        event: eventId,
+        ticket_registration_datetime: getCurrentIranTime(),
       },
       { headers }
     );
@@ -245,6 +323,48 @@ async function editOnline(index: number) {
     console.error(e);
     toast.error("ویرایش موفقیت‌آمیز نبود");
   }
+}
+
+const delete_loading = ref(false);
+const count_delete = ref(0);
+
+const deleteCheckedUsers = async () => {
+  delete_loading.value = true;
+  const checkedGuests = onlineGuests.value.filter((g) => g.checked);
+  if (checkedGuests.length === 0) {
+    toast.info("هیچ مهمانی انتخاب نشده است");
+    delete_loading.value = false;
+    return;
+  }
+
+  let temp = 0;
+
+  for (const guest of checkedGuests) {
+    count_delete.value = checkedGuests.length - temp;
+    temp++;
+    try {
+      const { fetchData: deleteuser } = useApi(
+        "DELETE",
+        `/api/v0/guest/${eventId}/${guest.id}/delete/`
+      );
+
+      await deleteuser();
+    } catch (error) {
+      delete_loading.value = false;
+      console.error(`Failed to delete guest ${guest.id}`, error);
+    }
+  }
+  delete_loading.value = false;
+  toast.warning("مهمانان انتخاب‌شده حذف شدند");
+  await fetchData();
+  onlineGuests.value = apiData.value || [];
+  originalGuests.value = JSON.parse(JSON.stringify(apiData.value || []));
+};
+
+function CheckAll() {
+  onlineGuests.value.forEach((g) => {
+    g.checked = !g.checked;
+  });
 }
 </script>
 
@@ -312,6 +432,13 @@ async function editOnline(index: number) {
       >
         {{ Object.keys(errors).length / 2 }} بلیط تکراری داریم
       </span>
+      <Button variant="destructive" class="" @click="deleteCheckedUsers">
+        حذف مهمانان انتخاب‌شده
+      </Button>
+      <p v-if="delete_loading">
+        درحال حذف...
+        {{ count_delete }}
+      </p>
     </div>
 
     <!-- Offline Guests -->
@@ -340,21 +467,13 @@ async function editOnline(index: number) {
               <Input v-model="g.first_name" placeholder="نام" size="lg" />
             </TableCell>
             <TableCell class="cells w-1/5">
-              <Input
-                v-model="g.last_name"
-                placeholder="نام خانوادگی"
-                size="sm"
-              />
+              <Input v-model="g.last_name" placeholder="نام خانوادگی" />
             </TableCell>
             <TableCell class="cells w-1/5">
-              <Input v-model="g.phone_number" placeholder="موبایل" size="sm" />
+              <Input v-model="g.phone_number" placeholder="موبایل" />
             </TableCell>
             <TableCell class="cells w-1/5">
-              <Input
-                v-model="g.ticket_number"
-                placeholder="شماره بلیط"
-                size="sm"
-              />
+              <Input v-model="g.ticket_number" placeholder="شماره بلیط" />
               <div
                 v-if="errors[`offline-${i}`]"
                 class="text-red-600 text-xs mt-1"
@@ -380,11 +499,7 @@ async function editOnline(index: number) {
               </span>
             </TableCell>
             <TableCell class="cells w-1/6">
-              <Button
-                variant="destructive"
-                size="sm"
-                @click="offlineGuests.splice(i, 1)"
-              >
+              <Button variant="destructive" @click="offlineGuests.splice(i, 1)">
                 حذف
               </Button>
             </TableCell>
@@ -392,7 +507,6 @@ async function editOnline(index: number) {
         </TableBody>
       </Table>
     </div>
-    <!-- Online Guests -->
     <!-- Online Guests -->
     <div>
       <h2 class="text-2xl font-bold text-gray-700 mb-2">
@@ -408,6 +522,9 @@ async function editOnline(index: number) {
             <TableCell class="cells">شماره بلیط</TableCell>
             <TableCell class="cells">نوع بلیط</TableCell>
             <TableCell class="cells">اقدامات</TableCell>
+            <TableCell class="cells min-w-24" :onclick="CheckAll"
+              >انتخاب همه</TableCell
+            >
           </TableRow>
         </TableBody>
 
@@ -420,16 +537,16 @@ async function editOnline(index: number) {
           >
             <!-- Editable fields -->
             <TableCell class="cells w-1/6">
-              <Input v-model="g.first_name" size="sm" />
+              <Input v-model="g.first_name" />
             </TableCell>
             <TableCell class="cells w-1/6">
-              <Input v-model="g.last_name" size="sm" />
+              <Input v-model="g.last_name" />
             </TableCell>
             <TableCell class="cells w-1/6">
-              <Input v-model="g.phone_number" size="sm" />
+              <Input v-model="g.phone_number" />
             </TableCell>
             <TableCell class="cells w-1/6">
-              <Input v-model="g.ticket_number" size="sm" />
+              <Input v-model="g.ticket_number" />
               <div
                 v-if="errors[`online-${g.id}`]"
                 class="text-red-600 text-xs mt-1"
@@ -456,7 +573,6 @@ async function editOnline(index: number) {
               <div class="flex gap-2 w-full">
                 <Button
                   variant="destructive"
-                  size="sm"
                   class="flex-1"
                   @click="deleteuserfromevent(g.id as number)"
                 >
@@ -466,13 +582,15 @@ async function editOnline(index: number) {
                 <Button
                   v-if="editedFlags[i]"
                   variant="outline"
-                  size="sm"
                   class="flex-1"
                   @click="editOnline(i)"
                 >
                   ویرایش
                 </Button>
               </div>
+            </TableCell>
+            <TableCell class="cells text-center">
+              <Checkbox v-model="g.checked" />
             </TableCell>
           </TableRow>
         </TableBody>
@@ -483,7 +601,7 @@ async function editOnline(index: number) {
 
 <style scoped>
 .cells {
-  padding-left: calc(var(--spacing) * 12);
+  padding-left: calc(var(--spacing) * 8);
   border-style: var(--tw-border-style);
   border-width: 1px;
   border-color: cadetblue;
