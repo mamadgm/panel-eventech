@@ -19,6 +19,9 @@ export const useHallStore = defineStore("hall", {
   state: () => ({
     hallsById: {} as Record<number, Hall>,
   }),
+    persist: {
+    storage: sessionStorage,
+  },
   actions: {
     async getDefealutHalls() {
       const token = useAuthStore().access_token;

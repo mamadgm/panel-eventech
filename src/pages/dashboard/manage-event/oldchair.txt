@@ -1,0 +1,32 @@
+<template>
+  <div class="p-6 space-y-4">
+    <!-- <div class="flex items-center gap-2">
+      <label for="mode" class="font-medium">نوع انتخاب صندلی:</label>
+      <select id="mode" v-model="mode" class="border rounded p-1">
+        <option :value="0">حالت ویژه</option>
+        <option :value="1">حالت رزرو</option>
+      </select>
+    </div> -->
+
+    <div class="flex justify-center mt-6 gap-4">{{}}</div>
+
+    <div v-if="loading" class="text-center text-gray-500">
+      در حال بارگذاری...
+    </div>
+
+    <div v-else-if="!error">
+      <!-- <div class="border rounded-lg bg-white p-4 shadow-sm">
+        <CinemaGrid :cinema="cinemaLayout" :mode="mode" :squareSize="25" @cellClicked="handleCellClicked" :allowchange="1" :height="370" />
+      </div>
+
+      <div class="flex justify-center mt-6 gap-4">
+        <Button variant="default" @click="submitEventData" :disabled="postLoading"> ذخیره چینش </Button>
+        <Button variant="outline" @click="refreshpage"> 🔄 بارگذاری مجدد </Button>
+      </div> -->
+    </div>
+
+    <div v-else>
+      <p class="text-red-500 text-center">خطا در دریافت اطلاعات سالن</p>
+    </div>
+  </div>
+</template>

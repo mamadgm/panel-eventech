@@ -1,6 +1,3 @@
-
-
-
 <script setup lang="ts">
 import { ref, onMounted, reactive } from "vue";
 import { useRoute } from "vue-router";

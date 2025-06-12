@@ -1,127 +1,253 @@
-<!-- src/pages/dashboard/tabs/ChairsTab.vue -->
 <script setup lang="ts">
-import { useApi } from "@/composables/useapi";
-import { onMounted, ref } from "vue";
-import CinemaGrid from "@/components/Cinema.vue"; // keep original
-import { Button } from "@/components/ui/button";
+import { computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
-import type { CinemaData, CinemaPostData } from "@/types/events";
+import { useHallStore } from "@/stores/hall";
+import { useEventStore } from "@/stores/event";
+import { Card } from "@/components/ui/card";
+import { toast } from "vue-sonner";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Star, CheckCircle, XCircle } from "lucide-vue-next";
+import { Button } from "@/components/ui/button/";
 
 const route = useRoute();
 const eventId = parseInt(route.params.id as string);
+const hallStore = useHallStore();
+const eventStore = useEventStore();
 
-// State
-const positionMatrix = ref<number[][]>([[0]]);
-const cinemaLayout = ref<number[][]>([[0]]);
-const successMessage = ref("");
-const errorMessage = ref("");
-const mode = ref<0 | 1>(0);
+const event = computed(() => eventStore.events[eventId]);
+const guests = computed(
+  () => eventStore.guestDataByEventId[eventId]?.guests ?? []
+);
+const analytics = computed(() => {
+  return eventStore.guestDataByEventId[eventId] ?? {};
+});
 
-const { data, error, loading, fetchData } = useApi<CinemaData>("GET", `/api/v0/hall/event/${eventId}/`);
-
-const refreshpage = async () => {
-  successMessage.value = "";
-  await fetchData();
-  if (data.value) {
-    positionMatrix.value = data.value.position_matrix;
-    cinemaLayout.value = positionMatrix.value;
-  } else if (error.value) {
-    console.error("Error fetching layout:", error.value);
-  }
+const formatDateTime = (dateStr: string) => {
+  const date = new Date(dateStr);
+  return date.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
 };
 
-const {
-  data: postData,
-  error: postError,
-  loading: postLoading,
-  fetchData: postFetch,
-} = useApi<CinemaPostData>("PUT", `/api/v0/hall/event/${eventId}/`);
-
-// Lifecycle
 onMounted(async () => {
-  await fetchData();
-  if (data.value) {
-    positionMatrix.value = data.value.position_matrix;
-    cinemaLayout.value = positionMatrix.value;
-  } else if (error.value) {
-    console.error("Error fetching layout:", error.value);
+  try {
+    await eventStore.getEventDetails(eventId);
+    toast.success("مهمانان دریافت شدند");
+  } catch (error: any) {
+    // toast.error("Failed to load event details");
   }
 });
 
-// Handlers
-const handleCellClicked = (payload: { rowIndex: number; colIndex: number; cellValue: number }) => {
-  const { rowIndex, colIndex, cellValue } = payload;
+async function refreshGuests() {
+  try {
+    await eventStore.getEventDetails(eventId);
+    toast.success("مهمانان مجدد دریافت شدند");
+  } catch (error: any) {
+    toast.error("خطایی رخ داد");
+  }
+}
 
-  // If your business logic still forbids clicking “-1” seats:
-  if (cinemaLayout.value[rowIndex][colIndex] === -1) return;
-
-  // Apply exactly what the child told us
-  cinemaLayout.value[rowIndex][colIndex] = cellValue;
-
-  // Keep your “working copy” in sync
-  positionMatrix.value = structuredClone(cinemaLayout.value);
+const toBoolean = (val: unknown): boolean => {
+  if (typeof val === "string") return val.trim().toLowerCase() === "true";
+  if (typeof val === "boolean") return val;
+  if (typeof val === "number") return val === 1;
+  return false;
 };
 
+const formatTime = (dateStr: string) => {
+  const date = new Date(dateStr);
+  return date.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+};
 
-const submitEventData = async () => {
-  const PostBody: CinemaPostData = {
-    event: eventId,
-    position_matrix: positionMatrix.value,
-  };
-
-  try {
-    await postFetch(PostBody);
-
-    if (postData.value) {
-      successMessage.value = "✅ چینش سالن با موفقیت ذخیره شد";
-      errorMessage.value = "";
-    } else {
-      errorMessage.value = postError.value || "❌ خطا در ذخیره‌سازی سالن";
-      successMessage.value = "";
-    }
-  } catch (err) {
-    errorMessage.value = "❌ خطای غیرمنتظره‌ای رخ داد.";
-    successMessage.value = "";
-  }
+const loadGuests = async (page: number) => {
+  await eventStore.getEventDetails(eventId, page);
 };
 </script>
 
 <template>
-  <div class="p-6 space-y-4">
-    <div class="flex items-center gap-2">
-      <label for="mode" class="font-medium">نوع انتخاب صندلی:</label>
-      <select id="mode" v-model="mode" class="border rounded p-1">
-        <option :value="0">حالت ویژه</option>
-        <option :value="1">حالت رزرو</option>
-      </select>
+  <div>
+    <!-- Hero Section -->
+    <div
+      class="w-full min-w-[800px] bg-white shadow-lg rounded-lg overflow-hidden"
+    >
+      <div class="px-6 py-8 md:px-12 bg-white space-y-2">
+        <h1 class="text-3xl md:text-4xl font-extrabold">
+          {{ event?.hall_name }}
+        </h1>
+        <p class="text-muted-foreground text-sm md:text-2xl">
+          {{ event?.hall_address }}
+        </p>
+
+        <div class="flex">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+            <Card class="p-4 text-center max-h-36">
+              <p class="text-2xl text-muted-foreground">شروع پذیرش</p>
+              <p class="font-semibold text-2xl">
+                {{ formatDateTime(event?.start_acceptance ?? "") }}
+              </p>
+            </Card>
+
+            <Card class="p-4 text-center max-h-36">
+              <p class="text-2xl text-muted-foreground">شروع رویداد</p>
+              <p class="font-semibold text-2xl">
+                {{ formatDateTime(event?.start_time ?? "") }}
+              </p>
+            </Card>
+
+            <Card class="p-4 text-center max-h-36">
+              <p class="text-2xl text-muted-foreground">پایان رویداد</p>
+              <p class="font-semibold text-2xl">
+                {{ formatDateTime(event?.end_time ?? "") }}
+              </p>
+            </Card>
+          </div>
+          <!-- Guest Analytics -->
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-4 m-6 mt-0">
+            <Card class="p-4 text-center">
+              <p class="text-xl text-muted-foreground">کل مهمان‌ها</p>
+              <p class="font-bold text-3xl text-blue-600">
+                {{ analytics?.total_guest ?? 0 }}
+              </p>
+            </Card>
+
+            <Card class="p-4 text-center">
+              <p class="text-xl text-muted-foreground">مهمان VIP</p>
+              <p class="font-bold text-3xl text-yellow-600">
+                {{ analytics?.vip_guest ?? 0 }}
+              </p>
+            </Card>
+
+            <Card class="p-4 text-center">
+              <p class="text-xl text-muted-foreground">پذیرفته‌شده</p>
+              <p class="font-bold text-3xl text-green-600">
+                {{ analytics?.accepted_guests ?? 0 }}
+              </p>
+            </Card>
+            <Card class="p-4 text-center">
+              <p class="text-xl text-muted-foreground">ظرفیت سالن</p>
+              <p class="font-bold text-3xl text-cyan-600">
+                {{ analytics?.capacity_hall ?? 0 }}
+              </p>
+            </Card>
+
+            <Card class="p-4 text-center">
+              <p class="text-xl text-muted-foreground">مهمان عادی</p>
+              <p class="font-bold text-3xl text-black">
+                {{
+                  (analytics?.total_guest ?? 0) - (analytics?.vip_guest ?? 0)
+                }}
+              </p>
+            </Card>
+            <Card class="p-4 text-center">
+              <p class="text-xl text-muted-foreground">پذیرفته‌نشده</p>
+              <p class="font-bold text-3xl text-red-600">
+                {{ analytics?.unaccepted_guests ?? 0 }}
+              </p>
+            </Card>
+          </div>
+        </div>
+      </div>
     </div>
-
-    <div v-if="loading" class="text-center text-gray-500">در حال بارگذاری...</div>
-
-    <div v-else-if="!error">
-      <div class="border rounded-lg bg-white p-4 shadow-sm">
-        <CinemaGrid :cinema="cinemaLayout" :mode="mode" :squareSize="25" @cellClicked="handleCellClicked" :allowchange="1" :height="370" />
-      </div>
-
-      <div class="flex justify-center mt-6 gap-4">
-        <Button variant="default" @click="submitEventData" :disabled="postLoading"> ذخیره چینش </Button>
-        <Button variant="outline" @click="refreshpage"> 🔄 بارگذاری مجدد </Button>
-      </div>
-
-      <p
-        class="text-center mt-4 w-3xl transition-all duration-300 min-h-[48px]"
-        :class="successMessage ? 'bg-green-100 text-green-600 p-3 rounded' : ''"
+    <Table>
+      <TableCaption
+        @click="refreshGuests"
+        class="cursor-pointer text-blue-600 hover:underline"
       >
-        {{ successMessage }}
-      </p>
+        برای رفرش کلیک کنید
+      </TableCaption>
 
-      <p v-show="errorMessage" class="text-red-600 text-center mt-4 bg-red-100 p-3 rounded">
-        {{ errorMessage }}
-      </p>
-    </div>
+      <TableBody>
+        <TableRow>
+          <TableHead class="text-right">نام</TableHead>
+          <TableHead class="text-right">نام خانوادگی</TableHead>
+          <TableHead class="text-right">موبایل</TableHead>
+          <TableHead class="text-right">شماره بلیط</TableHead>
+          <TableHead class="text-right">نوع بلیط</TableHead>
+          <TableHead class="text-right">وضعیت حضور</TableHead>
+          <TableHead class="text-right">زمان ورود</TableHead>
+        </TableRow>
+      </TableBody>
 
-    <div v-else>
-      <p class="text-red-500 text-center">خطا در دریافت اطلاعات سالن</p>
+      <TableBody>
+        <TableRow v-for="guest in guests" :key="guest.ticket_number">
+          <TableCell>{{ guest.first_name }}</TableCell>
+          <TableCell>{{ guest.last_name }}</TableCell>
+          <TableCell>{{ guest.phone_number }}</TableCell>
+          <TableCell>{{ guest.ticket_number }}</TableCell>
+
+          <!-- نوع بلیط -->
+          <TableCell class="text-right">
+            <span
+              class="inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold select-none"
+              :class="
+                toBoolean(guest.is_vip)
+                  ? 'bg-yellow-600 text-white'
+                  : 'bg-gray-200 text-gray-700'
+              "
+            >
+              <Star class="w-4 h-4 ml-1" />
+              {{ toBoolean(guest.is_vip) ? "ویژه" : "عادی" }}
+            </span>
+          </TableCell>
+
+          <!-- وضعیت حضور -->
+          <TableCell class="text-right">
+            <span
+              class="inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold select-none"
+              :class="
+                toBoolean(guest.is_accepted)
+                  ? 'bg-green-600 text-white'
+                  : 'bg-red-500 text-white'
+              "
+            >
+              <CheckCircle
+                v-if="toBoolean(guest.is_accepted)"
+                class="w-4 h-4 ml-1"
+              />
+              <XCircle v-else class="w-4 h-4 ml-1" />
+              {{ toBoolean(guest.is_accepted) ? "حاضر" : "غایب" }}
+            </span>
+          </TableCell>
+
+          <!-- زمان ورود -->
+          <TableCell class="text-right">
+            {{
+              guest.datetime_accepted
+                ? formatTime(guest.datetime_accepted)
+                : "-"
+            }}
+          </TableCell>
+        </TableRow>
+      </TableBody>
+    </Table>
+    <div class="mt-4 flex justify-center gap-4">
+      <Button
+        :disabled="!eventStore.guestDataByEventId[eventId]?.previous"
+        @click="() => eventStore.guestDataByEventId[eventId]?.previous !== null && loadGuests(eventStore.guestDataByEventId[eventId]!.previous!)"
+      >
+        صفحه قبل
+      </Button>
+
+      <Button
+        :disabled="!eventStore.guestDataByEventId[eventId]?.next"
+        @click="() => eventStore.guestDataByEventId[eventId]?.next !== null && loadGuests(eventStore.guestDataByEventId[eventId]!.next!)"
+      >
+        صفحه بعد
+      </Button>
     </div>
   </div>
 </template>

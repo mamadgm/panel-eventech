@@ -161,7 +161,7 @@ const imageUrl = computed(() => {
             >نام سالن</label
           >
           <input
-            v-model="eventStore.form.name"
+            v-model="eventStore.form.hall_name"
             type="text"
             id="name"
             placeholder="نام سالن"
@@ -173,7 +173,7 @@ const imageUrl = computed(() => {
             >آدرس سالن</label
           >
           <input
-            v-model="eventStore.form.name"
+            v-model="eventStore.form.hall_address"
             type="text"
             id="name"
             placeholder="آدرس سالن"
@@ -185,8 +185,8 @@ const imageUrl = computed(() => {
             >ظرفیت سالن</label
           >
           <input
-            v-model="eventStore.form.name"
-            type="text"
+            v-model="eventStore.form.hall_capacity"
+            type="number"
             id="name"
             placeholder="ظرفیت سالن"
             class="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -196,10 +196,10 @@ const imageUrl = computed(() => {
 
       <!-- Select Hall -->
       <div>
-        <label class="block mb-2 text-sm font-medium text-gray-700"
+        <!-- <label class="block mb-2 text-sm font-medium text-gray-700"
           >محل برگزاری</label
-        >
-        <RadioGroup v-model="eventStore.form.default_hall" class="space-y-3">
+        > -->
+        <!-- <RadioGroup v-model="eventStore.form.hall_id" class="space-y-3">
           <template v-for="hall in hallStore.hallsById" :key="hall.id">
             <div class="flex items-center gap-2">
               <RadioGroupItem
@@ -222,7 +222,7 @@ const imageUrl = computed(() => {
               :height="240"
             />
           </template>
-        </RadioGroup>
+        </RadioGroup> -->
       </div>
       <!-- Submit Button -->
       <div class="text-left">

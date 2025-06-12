@@ -11,7 +11,7 @@ const eventId = parseInt(route.params.id as string)
 
 onMounted(() => {
   // Log the eventId for debugging purposes
-  console.log("eventId:", eventId)
+  // console.log("eventId:", eventId)
 
   // Check if the eventId is NaN (invalid ID)
   if (isNaN(eventId)) {

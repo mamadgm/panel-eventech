@@ -23,6 +23,9 @@ export const useOperatorStore = defineStore("operators", {
     },
     operators: {} as Record<number, OperatorGet>,
   }),
+  persist: {
+    storage: sessionStorage,
+  },
   actions: {
     async getOperators(id: number) {
       const authStore = useAuthStore();
