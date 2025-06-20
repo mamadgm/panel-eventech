@@ -9,8 +9,8 @@
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
-        "deploy": "gh-pages -d dist"
-
+    "deploy": "gh-pages -d dist",
+    "test": "jest"
   },
   "dependencies": {
     "@heroicons/vue": "^2.2.0",
@@ -21,6 +21,7 @@
     "axios": "^1.8.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "jest": "^30.0.1",
     "lucide-vue-next": "^0.488.0",
     "pinia": "^3.0.2",
     "pinia-plugin-persistedstate": "^4.3.0",
