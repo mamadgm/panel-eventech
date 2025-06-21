@@ -1,9 +1,8 @@
-const axios = require("axios");
-const API_BASE_URL = "https://apieventech.mammutepd.ir";
+import axios from "axios";
+import { API_BASE_URL } from "./helpers";
 
-async function createEvent(token, name) {
+export async function createEvent(token, name) {
   const formData = new FormData();
-
   formData.append("name", name);
   formData.append("start_acceptance", "2012-12-12:12:12");
   formData.append("start_time", "2012-12-12:12:13");
@@ -19,6 +18,7 @@ async function createEvent(token, name) {
   categories.forEach((cat) => {
     formData.append("categories", cat);
   });
+
   //TODO: add image
   //   if (form.image instanceof File) {
   //     formData.append("image", form.image);
@@ -36,7 +36,3 @@ async function createEvent(token, name) {
     throw new Error("Bad things");
   }
 }
-
-module.exports = {
-  createEvent,
-};

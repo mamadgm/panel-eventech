@@ -1,7 +1,8 @@
-const axios = require("axios");
-const API_BASE_URL = "https://apieventech.mammutepd.ir";
+import axios from "axios";
+import { API_BASE_URL } from "./helpers";
 
-async function Login(phone_number, password) {
+export async function Login(phone_number: string, password: string) {
+
   const response = await axios.post(
     `${API_BASE_URL}/api/v0/account/login/password/`,
     {
@@ -16,7 +17,3 @@ async function Login(phone_number, password) {
     throw new Error("خظای غیر منتظره");
   }
 }
-
-module.exports = {
-  Login,
-};

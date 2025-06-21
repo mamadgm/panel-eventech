@@ -15,10 +15,15 @@ export const useAuthStore = defineStore("auth", {
       localStorage.removeItem("auth_token");
     },
     async Login(phone_number: string, password: string) {
-      const response = await axios.post(`${API_BASE_URL}/api/v0/account/login/password/`, {
-        phone_number: phone_number,
-        password: password,
-      });
+
+
+      const response = await axios.post(
+        `${API_BASE_URL}/api/v0/account/login/password/`,
+        {
+          phone_number: phone_number,
+          password: password,
+        }
+      );
 
       if (response.data) {
         this.access_token = response.data.access_token;
@@ -37,3 +42,29 @@ export const useAuthStore = defineStore("auth", {
     },
   },
 });
+
+/*
+<template>
+  <div>
+    <div class="grid grid-cols-8">
+      <div class="flex flex-col items-center justify-start bg-cyan-500 h-dvh">
+        <div>1</div>
+        <div>1</div>
+        <div>1</div>
+        <div>1</div>
+        <div>1</div>
+        <div>1</div>
+        <div>1</div>
+        <div>1</div>
+      </div>
+
+      <div class="col-span-7">
+        <Header></Header>
+        <div class="bg-red-400 p-1">
+          <router-view />
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+*/
