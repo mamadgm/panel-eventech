@@ -19,16 +19,13 @@ import { useRoute } from "vue-router";
 import { computed } from "vue";
 import { toast } from "vue-sonner";
 import { useRouter } from 'vue-router';
-import { useAuthStore } from "@/stores/auth"; // adjust path as needed
 
-const authStore = useAuthStore();
 const route = useRoute();
 const mainroute = useRouter();
 
 const handleLogout = () => {
   // Example logout logic
   localStorage.removeItem("token"); // or use Pinia/AuthStore etc.
-  authStore.logout();
   toast.success("با موفقیت خارج شدید");
   mainroute.push("/login");
 };

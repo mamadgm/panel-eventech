@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import { useAuthStore } from "@/stores/auth";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,7 +16,6 @@ import StatusUi from "@/components/StatusUi.vue";
 
 //etc
 const router = useRouter();
-const authStore = useAuthStore();
 //local vars
 const A_login_error = ref("");
 const A_login_mess = ref("");
@@ -27,15 +25,10 @@ const password = ref("");
 
 const handleLogin = async () => {
   try {
-    await authStore.Login(phone_number.value, password.value);
-    toast.success("با موفقیت وارد شدید" , {
-      description: authStore.first_name + " " + authStore.last_name
-    });
+    toast.success("با موفقیت وارد شدید", {});
     router.push("/dashboard/manage-event");
   } catch (error: any) {
-    toast.error('ورود ناموفق', {
-      description: error?.response?.data?.message || error.message || 'خطای ناشناخته',
-    })
+    toast.error("ورود ناموفق", {});
   }
 };
 </script>
