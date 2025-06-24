@@ -18,7 +18,7 @@ import { Calendar, Home } from "lucide-vue-next";
 import { useRoute } from "vue-router";
 import { computed } from "vue";
 import { toast } from "vue-sonner";
-import { useRouter } from 'vue-router';
+import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth"; // adjust path as needed
 
 const authStore = useAuthStore();
@@ -86,7 +86,9 @@ const data = {
         <SidebarMenuItem>
           <SidebarMenuButton size="lg" as-child>
             <router-link to="/dashboard">
-              <div class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+              <div
+                class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"
+              >
                 <Home class="size-4" />
               </div>
               <div class="flex flex-col gap-0.5 leading-none">
@@ -104,14 +106,26 @@ const data = {
         <SidebarMenu>
           <SidebarMenuItem v-for="item in data.navMain" :key="item.title">
             <SidebarMenuButton as-child>
-              <a :href="item.url" class="font-medium">
+              <router-link :to="item.url" class="font-medium">
                 {{ item.title }}
-              </a>
+              </router-link>
             </SidebarMenuButton>
             <SidebarMenuSub v-if="item.items.length">
-              <SidebarMenuSubItem v-for="childItem in item.items" :key="childItem.title">
-                <SidebarMenuSubButton as-child :is-active="activePath.includes(`/dashboard/manage-event/${route.params.id}/${childItem.url}`)">
-                  <router-link :to="`/dashboard/manage-event/${route.params.id}/${childItem.url}`">
+              <SidebarMenuSubItem
+                v-for="childItem in item.items"
+                :key="childItem.title"
+              >
+                <SidebarMenuSubButton
+                  as-child
+                  :is-active="
+                    activePath.includes(
+                      `/dashboard/manage-event/${route.params.id}/${childItem.url}`
+                    )
+                  "
+                >
+                  <router-link
+                    :to="`/dashboard/manage-event/${route.params.id}/${childItem.url}`"
+                  >
                     {{ childItem.title }}
                   </router-link>
                 </SidebarMenuSubButton>
@@ -120,7 +134,12 @@ const data = {
           </SidebarMenuItem>
         </SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton @click="handleLogout" class="text-red-600 hover:bg-red-100 dark:hover:bg-red-900"> خروج </SidebarMenuButton>
+          <SidebarMenuButton
+            @click="handleLogout"
+            class="text-red-600 hover:bg-red-100 dark:hover:bg-red-900"
+          >
+            خروج
+          </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarGroup>
     </SidebarContent>
