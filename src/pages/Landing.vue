@@ -30,6 +30,7 @@ const moveToLogin = () => {
           <Button variant="outline" class="w-full" @click="moveToDashboard">
             رفتن به داشبورد
           </Button>
+          new
         </div>
       </CardContent>
     </Card>
