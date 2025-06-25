@@ -1,24 +1,43 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { UserCircleIcon } from "lucide-vue-next";
+import { LucideBell } from "lucide-vue-next";
+import { Search } from "lucide-vue-next";
+import { Plus } from "lucide-vue-next";
+
+</script>
 
 <template>
-  <div class="grid grid-cols-12 gap-2">
-    <div class="bg-yellow-200 min-h-[50px] flex justify-center items-center col-span-2">
-      image and text
+  <div class="grid grid-cols-12 gap-2 mt-1 p-4">
+    <div class="min-h-[50px] flex justify-center items-center col-span-2">
+      <img
+        class="h-18 w-18 bg-blue-100 rounded-full"
+        alt="user"
+       src="/public/pics/person.png"
+        
+      ></img>
+      <div class="mr-4">
+        <h1 class="text-sm font-bold">علیرضا منصوریان</h1>
+        <h2 class="text-xs text-gray-500">مدیر پروژه</h2>
+      </div>
     </div>
-    <div class="bg-gray-300 min-h-[50px] flex justify-center items-center col-span-2">
-    ---
+    <div class="min-h-[50px] flex justify-center items-center col-span-2"></div>
+    <div
+      class="h-18 w-18 border-2 rounded-2xl flex justify-center items-center hover:bg-gray-100"
+    >
+      <LucideBell />
     </div>
-    <div class="bg-red-200 min-h-[50px] flex justify-center items-center">
-      icon
+
+    <div
+      class="bg-white rounded-2xl border-2 p-4 border-gray-200 min-h-[50px] flex justify-between items-center col-span-5"
+    >
+      <h1 class="text-gray-400">جستجو...</h1>
+      <Search></Search>
     </div>
-    <div class="bg-blue-200 min-h-[50px] flex justify-center items-center">
-      notif
-    </div>
-    <div class="bg-cyan-200 min-h-[50px] flex justify-center items-center col-span-4 mr-16">
-      search
-    </div>
-    <div class="bg-green-200 min-h-[50px] flex justify-center items-center col-span-2">
-      button
+    <div
+      class="bg-blue-500 hover:bg-blue-400 min-h-[50px] rounded-2xl flex justify-center items-center col-span-2"
+    >
+      <Plus class="text-white font-bold"></Plus>
+      <div class="text-white font-bold">رویداد جدید</div>
     </div>
   </div>
 </template>
