@@ -61,7 +61,7 @@ const config: Config = {
 			}
 		}
 	},
-	plugins: [rtl, require("tailwindcss-animate"), require('tailwindcss-rtl'),],
+	plugins: [rtl, require("tailwindcss-animate"), require('tailwindcss-rtl'), ],
 };
 
 export default config;

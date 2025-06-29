@@ -5,8 +5,8 @@ import sidebarHead from "@/components/sidebarHead.vue";
 </script>
 
 <template>
-  <div class="grid grid-cols-5 bg-white">
-    <div class="flex flex-col items-center justify-start h-dvh">
+  <div class="grid grid-cols-5 bg-white h-screen overflow-hidden">
+    <div class="flex flex-col items-center justify-start h-full">
       <div class="h-[12dvh] w-[90%] pt-4 pr-4">
         <sidebarHead />
       </div>
@@ -32,12 +32,31 @@ import sidebarHead from "@/components/sidebarHead.vue";
       </div>
     </div>
 
-    <div class="col-span-4">
-      <Header />
-      <div class="bg-red-400 p-Title Test">
+    <div class="col-span-4 flex flex-col h-full w-full overflow-y-hidden">
+      <div class="h-[12dvh]">
+        <Header />
+      </div>
+      <div
+        class="flex-1 scroll-styled overflow-y-auto border-4 border-amber-300"
+      >
         <router-view />
-        <!-- This is where pages like Landing.vue load -->
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+/* scoped or global CSS */
+.scroll-styled::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scroll-styled::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-styled::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 128, 0.6); /* semi-transparent thumb */
+  border-radius: 16px;
+}
+</style>
