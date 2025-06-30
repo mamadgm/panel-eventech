@@ -10,6 +10,7 @@ const config: Config = {
 		extend: {
 			fontFamily: {
 				yekan: ["yekan", "sans-serif"],
+				yekanb: ["yekanb", "sans-serif"],
 				
 			},
 			borderRadius: {

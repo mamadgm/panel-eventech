@@ -3,7 +3,7 @@ import { HeartHandshake } from "lucide-vue-next";
 </script>
 
 <template>
-  <div class="grid grid-cols-4">
+  <div class="grid grid-cols-4 font-[yekan]">
     <HeartHandshake
       class="h-16 w-16 flex justify-start items-start col-span-1 text-blue-600 drop-shadow-blue-400 drop-shadow-xl"
     >

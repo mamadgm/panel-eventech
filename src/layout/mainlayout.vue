@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import Header from "@/components/Header.vue";
+import ModelWizard from "@/components/modelWizard.vue";
 import sidebarButton from "@/components/sidebarButton.vue";
 import sidebarHead from "@/components/sidebarHead.vue";
 </script>
 
 <template>
+  <ModelWizard></ModelWizard>
   <div class="grid grid-cols-5 bg-white h-screen overflow-hidden">
     <div class="flex flex-col items-center justify-start h-full">
       <div class="h-[12dvh] w-[90%] pt-4 pr-4">
@@ -37,7 +39,7 @@ import sidebarHead from "@/components/sidebarHead.vue";
         <Header />
       </div>
       <div
-        class="flex-1 scroll-styled overflow-y-auto border-4 border-amber-300"
+        class="flex-1 scroll-styled overflow-y-auto border-amber-300"
       >
         <router-view />
       </div>

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { UserCircleIcon } from "lucide-vue-next";
+import { useModalStore } from "@/stores/model";
 import { LucideBell } from "lucide-vue-next";
 import { Search } from "lucide-vue-next";
 import { Plus } from "lucide-vue-next";
+const modal = useModalStore()
 
 </script>
 
@@ -12,7 +13,7 @@ import { Plus } from "lucide-vue-next";
       <img
         class="h-18 w-18 bg-blue-100 rounded-full"
         alt="user"
-       src="/public/pics/person.png"
+       src="/pics/person.png"
         
       ></img>
       <div class="mr-4">
@@ -33,11 +34,12 @@ import { Plus } from "lucide-vue-next";
       <h1 class="text-gray-400">جستجو...</h1>
       <Search></Search>
     </div>
-    <div
+    <button
       class="bg-blue-500 hover:bg-blue-400 min-h-[50px] rounded-2xl flex justify-center items-center col-span-2"
+    @click="modal.open()"
     >
       <Plus class="text-white font-bold"></Plus>
       <div class="text-white font-bold">رویداد جدید</div>
-    </div>
+    </button>
   </div>
 </template>
