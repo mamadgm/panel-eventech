@@ -12,6 +12,8 @@ import {
   CloudUpload,
   MapPin,
   UsersRound,
+  Download,
+  Info,
 } from "lucide-vue-next";
 
 const imageFile = ref<File | null>(null);
@@ -54,7 +56,7 @@ function handleDragOver(e: DragEvent) {
     class="fixed inset-0 bg-[rgba(0,0,0,0.9)] flex items-center justify-center z-50"
   >
     <div
-      class="bg-red-50 rounded-lg shadow-lg p-6 relative h-[85dvh] aspect-square flex flex-col justify-start items-center"
+      class="bg-white rounded-lg shadow-lg p-6 relative h-[85dvh] w-[45dvw] flex flex-col justify-start items-center"
     >
       <div>
         <!-- Close button -->
@@ -64,7 +66,6 @@ function handleDragOver(e: DragEvent) {
         >
           ✕
         </button>
-        
 
         <!-- Step indicator -->
         <div
@@ -223,11 +224,84 @@ function handleDragOver(e: DragEvent) {
           <!-- </div> -->
           <!-- </div> -->
         </div>
-        <div v-else>
+        <div v-else class="h-full flex flex-col">
           <WizardTitle
             big="ثبت شرکت‌کنندگان رویداد"
             small="فایل نمونه را دانلود و تکمیل کنید، سپس برای بررسی و ثبت نهایی بارگذاری نمایید."
           ></WizardTitle>
+
+          <div class="flex gap-3 font-[yekan] text-xl mb-4">
+            <Button
+              class="h-12 w-48 bg-blue-500 rounded-2xl text-white hover:bg-blue-300 duration-200"
+              ><div class="flex gap-1 justify-center items-center">
+                <Download></Download>
+                <h1>دانلود فایل نمونه</h1>
+              </div></Button
+            >
+            <Button
+              class="h-12 w-48 bg-white rounded-2xl border-2 border-gray-300 hover:bg-gray-100 duration-200"
+              ><div class="flex gap-1 justify-center items-center">
+                <CloudUpload></CloudUpload>
+                <h1>بارگزاری فایل</h1>
+              </div></Button
+            >
+          </div>
+
+          <div class="flex p-2 bg-gray-100 rounded-3xl justify-between">
+            <div class="h-full">
+              <div class="flex items-center gap-2 font-[yekanb] text-xl">
+                <Info
+                  class="bg-yellow-300 w-24 h-24 p-6 rounded-full text-white"
+                ></Info>
+                <h1>
+                  راهنمای کامل بارگذاری <br />
+                  فایل اکسل شرکت‌کنندگان
+                </h1>
+              </div>
+              <div class="font-[yekan] pr-8 pt-2 text-[12px] space-y-1">
+                <div
+                  class="before:content-['A'] before:mr-2 before:text-yellow-500"
+                >
+                  فایل بارگذاری‌شده باید بر اساس فایل نمونه تکمیل شده باشد.
+                </div>
+                <div
+                  class="before:content-['B'] before:mr-2 before:text-yellow-500"
+                >
+                  ستون‌ها را بدون تغییر در ساختار و ترتیب حفظ کنید.
+                </div>
+                <div
+                  class="before:content-['C'] before:mr-2 before:text-yellow-500"
+                >
+                  از وارد کردن اطلاعات تکراری یا ناقص خودداری نمایید.
+                </div>
+                <div
+                  class="before:content-['D'] before:mr-2 before:text-yellow-500"
+                >
+                  شماره تماس باید فقط شامل اعداد و بدون فاصله یا کاراکتر اضافی
+                  باشد.
+                </div>
+                <div
+                  class="before:content-['E'] before:mr-2 before:text-yellow-500"
+                >
+                  در ستون نوع بلیط، فقط گزینه‌های مشخص‌شده در فایل نمونه را وارد
+                  کنید.
+                </div>
+                <div
+                  class="before:content-['F'] before:mr-2 before:text-yellow-500"
+                >
+                  ظرفیت کلی رویداد را در نظر بگیرید تا تعداد ثبت‌نامی‌ها از آن
+                  بیشتر نشود.
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center bg-transparent h-full">
+              <img
+                src="/pics/sheet.png"
+                alt="good and correct sheet"
+                class="h-full rounded-3xl object-contain"
+              />
+            </div>
+          </div>
         </div>
       </div>
 

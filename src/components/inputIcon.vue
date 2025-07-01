@@ -29,7 +29,7 @@ const updateValue = (e: Event) => {
         :placeholder="hint"
         :value="modelValue"
         @input="updateValue"
-        class="flex-1 outline-none text-gray-700 placeholder:text-gray-400 bg-transparent"
+        class="flex-1 outline-none text-gray-700 placeholder:text-gray-400 bg-transparent placeholder:text-xs"
       />
     </div>
   </div>
