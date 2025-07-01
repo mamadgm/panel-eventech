@@ -8,9 +8,10 @@ import {
   PlaneTakeoff,
   Tags,
   Ticket,
-  ImagePlus,
   Check,
   CloudUpload,
+  MapPin,
+  UsersRound,
 } from "lucide-vue-next";
 
 const imageFile = ref<File | null>(null);
@@ -63,6 +64,7 @@ function handleDragOver(e: DragEvent) {
         >
           ✕
         </button>
+        
 
         <!-- Step indicator -->
         <div
@@ -141,7 +143,9 @@ function handleDragOver(e: DragEvent) {
                 alt="Uploaded"
                 class="max-h-64 rounded-xl mb-4 shadow-md"
               />
-              <Check class="text-green-500 w-8 h-8 mb-2 bg-white rounded-full p-2" />
+              <Check
+                class="text-green-500 w-8 h-8 mb-2 bg-white rounded-full p-2"
+              />
               <p class="font-bold font-[yekanb] text-lg">
                 تصویر با موفقیت بارگذاری شده
               </p>
@@ -171,11 +175,53 @@ function handleDragOver(e: DragEvent) {
             </div>
           </div>
         </div>
-        <div v-else-if="modal.step === 3">
+        <div v-else-if="modal.step === 3" class="h-full flex flex-col">
           <WizardTitle
             big="مدیریت سالن برگزاری"
             small="می‌توانید از سامانه هوشمند استفاده کنید یا فقط اطلاعات سالن را به‌صورت دستی وارد نمایید."
           ></WizardTitle>
+          <!-- 
+          <div
+            class="flex-1 mb-32 rounded-3xl border-2 flex flex-col items-center justify-center"
+          >
+            <h1 class="text-center font-[yekan] text-2xl">
+              آیا مایل به استفاده از سامانه هوشمند <br />
+              برای مدیریت سالن هستید؟
+            </h1>
+            <div
+              class="flex items-center justify-center gap-x-12 font-[yekan] text-2xl"
+            > -->
+          <div class="flex gap-y-6 flex-col">
+            <div class="flex justify-between gap-x-2">
+              <InputIcon
+                title="نام سالن"
+                hint="مثلاً سالن همایش مرکزی دانشگاه..."
+                v-model="eventName"
+              ></InputIcon>
+              <InputIcon
+                title="آدرس سالن"
+                hint="آدرس دقیق محل برگزاری رویداد را وارد نمایید...."
+                v-model="eventName"
+                :icon="MapPin"
+              ></InputIcon>
+            </div>
+            <InputIcon
+              title="ظرفیت کل سالن"
+              hint="ظرفیت نهایی قابل ‌استفاده برای رویداد (به عدد)"
+              v-model="eventName"
+              :icon="UsersRound"
+            ></InputIcon>
+          </div>
+          <!-- <Button
+                class="h-16 w-40 bg-blue-500 rounded-2xl m-8 text-white hover:bg-blue-300 duration-200"
+                >بله</Button
+              >
+              <Button
+                class="h-16 w-40 bg-white rounded-2xl m-8 border-2 hover:bg-gray-300 duration-200"
+                >خیر</Button
+              > -->
+          <!-- </div> -->
+          <!-- </div> -->
         </div>
         <div v-else>
           <WizardTitle

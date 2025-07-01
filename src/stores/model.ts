@@ -3,13 +3,15 @@ import { defineStore } from "pinia";
 
 export const useModalStore = defineStore("modal", {
   state: () => ({
-    isOpen: false as boolean,
-    step: 1 as number,
+    isOpen: false,
+    step: 1,
+    cinemaState : false
   }),
   actions: {
     open() {
       this.isOpen = true;
       this.step = 1;
+      this.cinemaState = false ;
     },
     close() {
       this.isOpen = false;
@@ -23,5 +25,6 @@ export const useModalStore = defineStore("modal", {
     goTo(n: number) {
       if (n >= 1 && n <= 4) this.step = n;
     },
+
   },
 });
